@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <title th:text="${(p != null ? p.pname : 'Chi tiết sản phẩm') + ' | Tiệm Ba Hoa'}">Tiệm Ba Hoa</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+    </head>
+    <body style="background-color: #f8fafc; margin: 0; padding: 0; font-family: Arial, sans-serif;">
+
+        <div th:replace="~{view/header :: body}"></div> 
+
+        <div class="detail-wrapper" th:if="${p != null}">
+            <div class="product-top">
+                <div class="product-img">
+                    <img th:src="@{'/images/' + ${p.pimage}}" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=500'" th:alt="${p.pname}">
+                </div>
+
+                <div class="product-info">
+                    <h1 th:text="${p.pname}">Tên hoa</h1>
+                    <div class="price-box">
+                        <th:block th:if="${p.discount != null && p.discount > 0}">
+                            <span class="old-price" th:text="${#numbers.formatDecimal(p.pprice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                            <span class="badge-discount" th:text="${'- ' + p.discount + '% GIẢM'}">- 10% GIẢM</span>
+                        </th:block>
+                        <span class="new-price" th:text="${#numbers.formatDecimal(p.finalPrice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                    </div>
+
+                    <div class="offers">
+                        <p><i class="fas fa-truck"></i> Giao hoa hỏa tốc 60 phút</p>
+                        <p><i class="fas fa-gift"></i> Tặng kèm thiệp/banner chúc mừng miễn phí</p>
+                        <p><i class="fas fa-camera"></i> Chụp ảnh hoa gửi khách xem trước khi giao</p>
+                    </div>
+
+                    <div class="detail-btn-group">
+                        <th:block th:if="${p.stock != null && p.stock > 0}">
+                            <a th:href="@{/AddToCart(pid=${p.id},action='buynow')}" class="detail-btn detail-btn-buy">
+                                <i class="fas fa-bolt"></i> ĐẶT HOA MUA NGAY
+                            </a>
+                            <form th:action="@{/AddToCart}" method="post" style="margin: 0;">
+                                <input type="hidden" name="pid" th:value="${p.id}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="detail-btn detail-btn-cart" style="width: 100%; border: none; cursor: pointer;">
+                                    <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
+                                </button>
+                            </form>
+                            <p style="color: #059669; font-size: 13px; font-weight: bold; margin-top: 5px; text-align: center;">
+                                <i class="fas fa-check-circle"></i> Sẵn sàng giao ngay (<span th:text="${p.stock}">10</span> bó có sẵn)
+                            </p>
+                        </th:block>
+                        <th:block th:unless="${p.stock != null && p.stock > 0}">
+                            <button class="detail-btn" style="background:#cbd5e1; color:white; border:none; cursor:not-allowed;" disabled>
+                                <i class="fas fa-box-open"></i> SẢN PHẨM TẠM HẾT HÀNG
+                            </button>
+                            <p style="color: #dc2626; font-size: 13px; font-weight: bold; margin-top: 5px; text-align: center;">
+                                Florist đang chuẩn bị thêm hoa mới, vui lòng quay lại sau!
+                            </p>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+
+            <div class="description-box">
+                <h3>Mô tả sản phẩm</h3>
+                <div class="description-content" th:text="${p.description != null ? p.description : 'Đang cập nhật mô tả ý nghĩa hoa...'}">Mô tả</div>
+            </div>
+            
+            <div style="margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 40px;">
+                <h3 style="color: #1e293b; font-size: 22px; margin-bottom: 20px; border-left: 4px solid #d63384; padding-left: 10px;">Đánh giá từ khách hàng</h3>
+
+                <div th:if="${session.userSession != null}" style="background: #fff5f8; padding: 25px; border-radius: 12px; border: 1px dashed #d63384; margin-bottom: 30px;">
+                    <form th:action="@{/Review}" method="post">
+                        <input type="hidden" name="pid" th:value="${p.id}">
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold; color: #1e293b; display: block; margin-bottom: 8px;">Đánh giá sao:</label>
+                            <select name="rating" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; color: #d97706; outline: none;">
+                                <option value="5">⭐⭐⭐⭐⭐ (Tuyệt vời)</option>
+                                <option value="4">⭐⭐⭐⭐ (Tốt)</option>
+                                <option value="3">⭐⭐⭐ (Khá)</option>
+                                <option value="2">⭐⭐ (Tệ)</option>
+                                <option value="1">⭐ (Rất tệ)</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold; color: #1e293b; display: block; margin-bottom: 8px;">Bình luận của bạn:</label>
+                            <textarea name="comment" rows="3" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-family: inherit;" placeholder="Chia sẻ cảm nhận của bạn về bó hoa này..." required></textarea>
+                        </div>
+                        <button type="submit" style="background: #d63384; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;"><i class="fas fa-paper-plane"></i> GỬI ĐÁNH GIÁ</button>
+                    </form>
+                </div>
+                <div th:unless="${session.userSession != null}" style="background: #f8fafc; padding: 20px; border-radius: 10px; text-align: center; color: #64748b; margin-bottom: 30px; border: 1px solid #e2e8f0;">
+                    Vui lòng <a th:href="@{/Login}" style="color: #d63384; font-weight: bold; text-decoration: none;">Đăng nhập</a> để để lại đánh giá cho sản phẩm này.
+                </div>
+
+                <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                    <div th:if="${reviews == null || reviews.isEmpty()}">
+                        <p style="color: #94a3b8; font-style: italic;">Chưa có đánh giá nào. Hãy là người đầu tiên review bó hoa này!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${allProducts != null && !allProducts.isEmpty()}" style="margin-top: 60px; border-top: 1px solid #e2e8f0; padding-top: 40px;">
+                <div class="section-title-wrapper" style="margin-bottom: 30px;">
+                    <h2 class="section-title" style="font-size: 22px;"><i class="fas fa-seedling"></i> Có thể bạn sẽ thích</h2>
+                </div>
+                
+                <div class="product-grid">
+                    <div th:each="o : ${allProducts}" th:if="${o.id != p.id}" class="product-item">
+                        <div class="badge-discount" th:if="${o.discount != null && o.discount > 0}" th:text="${'GIẢM ' + o.discount + '%'}">GIẢM</div>
+                        <div class="img-box">
+                            <a th:href="@{/ProductDetail(pid=${o.id})}">
+                                <img th:src="@{'/images/' + ${o.pimage}}" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=300'" th:alt="${o.pname}">
+                            </a>
+                        </div>
+                        <div class="product-details">
+                            <h4 th:title="${o.pname}">
+                                <a th:href="@{/ProductDetail(pid=${o.id})}" style="text-decoration: none; color: inherit;" th:text="${o.pname}">Tên</a>
+                            </h4>
+                            <div class="price-section">
+                                <span class="price-discount" th:text="${#numbers.formatDecimal(o.finalPrice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <div th:replace="~{view/footer :: body}"></div> 
+    </body>
+</html>

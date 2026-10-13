@@ -1,0 +1,69 @@
+﻿
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bảo Mật Thông Tin - Tiệm Ba Hoa</title>
+    <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+    <link rel="stylesheet" th:href="@{/css/info.css}" href="/css/info.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div th:replace="~{view/header :: body}"></div>
+
+    <div class="info-page-wrapper">
+        <div class="info-header">
+            <h1>Chính Sách Bảo Mật Thông Tin</h1>
+            <p>An toàn dữ liệu của bạn là trách nhiệm của chúng tôi</p>
+        </div>
+        
+        <div class="info-content">
+            <div class="info-section">
+                <h2><i class="fas fa-user-shield"></i> 1. Thông Tin Thu Thập</h2>
+                <p>Tiệm Ba Hoa hiểu rằng việc bảo mật thông tin cá nhân của khách hàng là vô cùng quan trọng. Để phục vụ việc xử lý đơn hàng và giao hàng, chúng tôi chỉ thu thập các thông tin cần thiết nhất, bao gồm:</p>
+                <ul>
+                    <li><strong>Thông tin người đặt:</strong> Họ tên, Số điện thoại, Email, Địa chỉ thanh toán.</li>
+                    <li><strong>Thông tin người nhận (nếu có):</strong> Họ tên, Số điện thoại, Địa chỉ giao hàng chi tiết.</li>
+                    <li><strong>Dữ liệu tương tác:</strong> Lịch sử đơn hàng, nội dung đánh giá sản phẩm, tin nhắn hỗ trợ trực tuyến.</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-bullseye"></i> 2. Mục Đích Sử Dụng Dữ Liệu</h2>
+                <p>Toàn bộ dữ liệu thu thập được sử dụng độc quyền cho các mục đích hợp pháp sau đây:</p>
+                <ul>
+                    <li>Xử lý và xác nhận đơn đặt hàng trực tuyến.</li>
+                    <li>Phối hợp với nhân viên giao hàng để giao hoa đúng người, đúng địa điểm.</li>
+                    <li>Gửi email xác nhận đơn hàng, thông báo trạng thái giao hàng, hoặc hóa đơn điện tử.</li>
+                    <li>Cung cấp dịch vụ chăm sóc khách hàng, giải quyết khiếu nại hoặc hỗ trợ kỹ thuật.</li>
+                    <li>Gửi các thông báo về mã giảm giá, chương trình khuyến mãi (chỉ khi khách hàng đồng ý đăng ký nhận tin).</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-lock"></i> 3. Cam Kết Bảo Mật Dữ Liệu</h2>
+                <p>Tiệm Ba Hoa cam kết thực hiện các tiêu chuẩn bảo mật dữ liệu nghiêm ngặt:</p>
+                <ul>
+                    <li><strong>Không bán dữ liệu:</strong> Tuyệt đối không mua bán, trao đổi hoặc cung cấp thông tin cá nhân của khách hàng cho bất kỳ bên thứ ba nào vì mục đích thương mại.</li>
+                    <li><strong>Bảo mật kỹ thuật:</strong> Website sử dụng chứng chỉ SSL để mã hóa thông tin truyền tải. Mật khẩu tài khoản của người dùng được mã hóa một chiều trong cơ sở dữ liệu.</li>
+                    <li><strong>Bảo mật thanh toán:</strong> Các thông tin về thẻ ngân hàng, ví điện tử khi thanh toán được xử lý bởi cổng thanh toán của đối tác uy tín, hệ thống của chúng tôi không lưu trữ trực tiếp mã thẻ tín dụng của bạn.</li>
+                    <li><strong>Bảo mật danh tính người tặng:</strong> Chúng tôi hoàn toàn tôn trọng quyền riêng tư. Nếu bạn muốn gửi tặng hoa giấu tên, chúng tôi cam kết bảo mật tuyệt đối thông tin người đặt hoa trước người nhận.</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-user-check"></i> 4. Quyền Của Khách Hàng</h2>
+                <p>Với tư cách là chủ sở hữu dữ liệu, quý khách luôn có toàn quyền đối với thông tin cá nhân của mình:</p>
+                <ul>
+                    <li>Có quyền đăng nhập vào tài khoản để xem, cập nhật hoặc chỉnh sửa thông tin cá nhân bất cứ lúc nào.</li>
+                    <li>Có quyền yêu cầu bộ phận CSKH xóa bỏ hoàn toàn tài khoản và lịch sử giao dịch ra khỏi hệ thống.</li>
+                    <li>Có quyền từ chối nhận các email/SMS quảng cáo bằng cách bấm "Hủy đăng ký" ở cuối các email marketing.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{view/footer :: body}"></div>
+</body>
+</html>
+

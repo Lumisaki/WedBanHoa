@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Giỏ Hàng Của Bạn | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/index.css?v=2.0}" href="/css/index.css?v=2.0">
+</head>
+<body>
+
+    <div th:replace="~{view/header :: body}"></div>
+    
+    <div class="cart-wrapper">
+        <a th:href="@{/index}" class="btn-nav-top-right"><i class="fas fa-home"></i> Trở về trang chủ</a>
+
+        <div class="cart-container">
+            <h2><i class="fas fa-shopping-cart"></i> Giỏ Hàng Của Bạn</h2>
+            
+            <div th:if="${cartList == null || cartList.isEmpty()}" style="text-align: center; padding: 50px 0; color: #b2bec3;">
+                <i class="fas fa-shopping-bag" style="font-size: 55px; margin-bottom: 20px; display: block; color: #fab1a0;"></i>
+                <p style="font-size: 16px; font-weight: 500; color: #718096;">Giỏ hàng của bạn đang trống rỗng!</p>
+                <a th:href="@{/index}" style="display: inline-block; margin-top: 15px; color: white; background: #d63384; padding: 11px 22px; border-radius: 8px; font-weight: bold; text-decoration: none; font-size: 14px;">Quay lại sắm hoa ngay</a>
+            </div>
+            
+            <div th:unless="${cartList == null || cartList.isEmpty()}">
+                <div class="cart-header-row">
+                    <div>Hình ảnh</div>
+                    <div class="text-left-align" style="padding-left: 20px;">Tên sản phẩm</div>
+                    <div>Giá bán</div>
+                    <div>Số lượng</div>
+                    <div>Tổng tiền</div>
+                    <div>Xóa</div>
+                </div>
+                
+                <div th:each="item : ${cartList}" class="cart-item-row">
+                    <div>
+                        <img th:src="@{'/images/' + ${item.pimage}}" class="prod-img-cart" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'">
+                    </div>
+                    <div class="text-left-align" style="padding-left: 20px;">
+                        <span class="prod-name" th:text="${item.pname}">Tên hoa</span>
+                    </div>
+                    <div class="prod-price">
+                        <span th:text="${#numbers.formatDecimal(item.finalPrice, 0, 'COMMA', 0, 'POINT') + 'đ'}" style="font-weight:600; color:#d63384;">0đ</span>
+                    </div>
+                    
+                    <div>
+                        <div class="qty-control">
+                            <a th:href="@{/UpdateCart(pid=${item.id},action='dec')}" class="qty-btn" title="Giảm số lượng"><i class="fas fa-minus"></i></a>
+                            <span class="qty-num" th:text="${item.quantity != null ? item.quantity : 1}">1</span>
+                            <a th:href="@{/UpdateCart(pid=${item.id},action='inc')}" class="qty-btn" title="Tăng số lượng"><i class="fas fa-plus"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="prod-total-cart">
+                        <span th:text="${#numbers.formatDecimal(item.finalPrice * (item.quantity != null ? item.quantity : 1), 0, 'COMMA', 0, 'POINT') + 'đ'}" style="font-weight:bold;">0đ</span>
+                    </div>
+                    <div>
+                        <a th:href="@{/RemoveFromCart(pid=${item.id})}" class="btn-delete-cart" onclick="return confirm('Bạn chắc chắn muốn bỏ bông hoa này khỏi giỏ hàng không?')">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="total-box-cart">
+                    Tổng tiền phải trả: <span class="total-price-cart" th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                </div>
+                
+                <div class="action-links">
+                    <a th:href="@{/index}" class="btn-continue"><i class="fas fa-arrow-left"></i> Tiếp tục mua hoa</a>
+                    <a th:href="@{/checkout}" class="btn-checkout">Tiến hành thanh toán <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <div th:replace="~{view/footer :: body}"></div> 
+</body>
+</html>

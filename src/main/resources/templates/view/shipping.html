@@ -1,0 +1,73 @@
+﻿
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chính Sách Vận Chuyển - Tiệm Ba Hoa</title>
+    <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+    <link rel="stylesheet" th:href="@{/css/info.css}" href="/css/info.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div th:replace="~{view/header :: body}"></div>
+
+    <div class="info-page-wrapper">
+        <div class="info-header">
+            <h1>Chính Sách Vận Chuyển</h1>
+            <p>Cam kết giao hoa đúng giờ - Tươi nguyên vẹn</p>
+        </div>
+        
+        <div class="info-content">
+            <div class="info-section">
+                <h2><i class="fas fa-map-marked-alt"></i> Phạm Vi Giao Hàng</h2>
+                <p>Tiệm Ba Hoa hiện tại cung cấp dịch vụ điện hoa và giao hàng tận nơi tại các khu vực sau:</p>
+                <ul>
+                    <li><strong>Nội thành Hà Nội:</strong> Tất cả các quận nội thành (Cầu Giấy, Đống Đa, Ba Đình, Hoàn Kiếm, Hai Bà Trưng, Thanh Xuân, Tây Hồ, Hoàng Mai...).</li>
+                    <li><strong>Khu vực ngoại thành:</strong> Vui lòng liên hệ trước qua Hotline để kiểm tra khả năng giao hàng và phụ phí.</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-shipping-fast"></i> Thời Gian Giao Hàng</h2>
+                <p>Chúng tôi thấu hiểu thời gian là yếu tố quan trọng nhất khi tặng quà. Do đó, Tiệm Ba Hoa cam kết:</p>
+                <ul>
+                    <li><strong>Giao hỏa tốc 60 phút:</strong> Áp dụng cho các đơn hàng nội thành với các mẫu hoa có sẵn tại cửa hàng.</li>
+                    <li><strong>Giao theo khung giờ yêu cầu:</strong> Khách hàng có thể chọn khung giờ giao cụ thể (sáng, chiều, tối) khi đặt hàng trước ít nhất 2-4 tiếng.</li>
+                    <li><strong>Giao hàng ban đêm:</strong> Hỗ trợ giao hàng ngoài giờ hành chính (sau 22:00) với mức phụ phí dịch vụ ban đêm.</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-coins"></i> Phí Giao Hàng</h2>
+                <ul>
+                    <li><strong>Miễn phí vận chuyển (Freeship):</strong> Áp dụng cho mọi đơn hàng có giá trị từ 500.000 VNĐ trở lên trong phạm vi bán kính 5km tính từ cửa hàng.</li>
+                    <li><strong>Đơn hàng dưới 500.000 VNĐ hoặc xa hơn 5km:</strong> Đồng giá phí ship nội thành là 30.000 VNĐ.</li>
+                    <li>Phí giao hàng ngoại thành sẽ được nhân viên tư vấn báo trước khi khách hàng chốt đơn.</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-box-open"></i> Quy Định Kiểm Tra Sản Phẩm</h2>
+                <p>Nhằm đảm bảo quyền lợi tuyệt đối cho khách hàng, chúng tôi áp dụng quy trình kiểm tra nghiêm ngặt:</p>
+                <ul>
+                    <li><strong>Chụp ảnh trước khi giao:</strong> Sau khi cắm xong, chúng tôi sẽ chụp ảnh sản phẩm thực tế và gửi qua Zalo/Email để người đặt duyệt form dáng và loại hoa trước khi shipper đi giao.</li>
+                    <li><strong>Đồng kiểm khi nhận:</strong> Người nhận có quyền mở bọc và kiểm tra hoa cùng với shipper. Nếu hoa bị dập nát, héo úa hoặc sai thiết kế, người nhận có quyền từ chối nhận hàng.</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-exclamation-triangle"></i> Các Trường Hợp Giao Chậm & Lưu Ý</h2>
+                <p>Trong một số điều kiện bất khả kháng, thời gian giao hàng có thể bị chậm trễ so với dự kiến. Chúng tôi sẽ thông báo trước cho quý khách trong các trường hợp:</p>
+                <ul>
+                    <li>Thời tiết xấu (mưa bão lớn, ngập lụt).</li>
+                    <li>Lễ Tết, các dịp lễ lớn (Valentine, 8/3, 20/10) do lượng đơn hàng tăng đột biến.</li>
+                    <li>Người nhận không nghe máy hoặc địa chỉ người nhận cung cấp không chính xác. (Shipper sẽ đợi tối đa 15 phút tại điểm giao và gọi điện tối đa 3 lần).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{view/footer :: body}"></div>
+</body>
+</html>
+

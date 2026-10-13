@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đánh Giá Sản Phẩm | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <h2>TIỆM BA HOA</h2>
+            <p>MANAGEMENT</p>
+        </div>
+        <ul class="nav-menu">
+            <li id="menu-main" class="active"><a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a></li>
+            <li><a th:href="@{/ManagerProduct}"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a></li>
+            <li><a th:href="@{/ManagerCustomer}"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
+            <li><a th:href="@{/ManageOrder}"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a></li>
+            <li id="menu-chat"><a href="#" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Hộp thư hỗ trợ <span id="admin-chat-badge">Mới</span></a></li>
+        </ul>
+        <div class="nav-bottom">
+            <ul class="nav-menu" style="padding: 0;">
+                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
+                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1>Phân Tích Đánh Giá Của Khách Hàng</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div id="content-main">
+                <a th:href="@{/AdminDashboard}" class="btn-back" style="margin-bottom: 25px;"><i class="fas fa-arrow-left"></i> Trở Về Bảng Điều Khiển</a>
+
+                <div th:if="${productDetail != null}" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; margin-bottom: 25px; display: flex; align-items: center; gap: 20px;">
+                    <img th:src="@{'/images/' + ${productDetail.pimage}}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 1px solid #e2e8f0;" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'">
+                    <div>
+                        <h2 style="margin: 0 0 5px 0; color: #1e293b;" th:text="${productDetail.pname}"></h2>
+                        <p style="margin: 0; color: #64748b; font-size: 14px;">Mã SP: <strong>#<span th:text="${productDetail.id}"></span></strong> | Lượt bán: <strong style="color: #10b981;" th:text="${productDetail.sold != null ? productDetail.sold : 0} + ' bông'"></strong></p>
+                    </div>
+                </div>
+
+                <div class="table-card" style="margin-top: 0;">
+                    <div class="table-header">
+                        <h3><i class="fas fa-comments" style="color: #d63384; margin-right: 8px;"></i> Lịch sử phản hồi từ Khách Hàng</h3>
+                    </div>
+                    
+                    <th:block th:if="${listReviews != null && !listReviews.empty}">
+                        <div class="admin-search-wrapper">
+                            <div class="admin-search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                            </div>
+                        </div>
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Khách hàng</th>
+                                    <th>Số sao</th>
+                                    <th>Nội dung bình luận</th>
+                                    <th>Thời gian đánh giá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <th:block th:each="r : ${listReviews}">
+                                    <tr>
+                                        <td>
+                                            <strong style="color: #1e293b;"><span th:text="${r.fullname}"></span></strong><br>
+                                            <span style="font-size: 12px; color: #94a3b8;"><span th:text="${r.email}"></span></span>
+                                        </td>
+                                        <td style="color: #f59e0b; font-size: 13px;">
+                                            <th:block th:if="${r.rating != null && r.rating > 0}" th:each="star : ${#numbers.sequence(1, r.rating)}">
+                                                <i class="fas fa-star"></i>
+                                            </th:block>
+                                        </td>
+                                        <td style="color: #4a5568; font-style: italic;">"<span th:text="${r.comment}"></span>"</td>
+                                        <td style="color: #64748b; font-size: 13px;" th:text="${r.review_date}"></td>
+                                    </tr>
+                                </th:block>
+                            </tbody>
+                        </table>
+                    </th:block>
+                    
+                    <div th:unless="${listReviews != null && !listReviews.empty}" style="text-align: center; padding: 50px; color: #94a3b8;">
+                        <i class="fas fa-comment-slash" style="font-size: 40px; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
+                        Sản phẩm này hiện chưa có lượt đánh giá nào từ khách hàng.
+                    </div>
+                </div>
+            </div>
+
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/admin-search.js}"></script>
+</body>
+</html>

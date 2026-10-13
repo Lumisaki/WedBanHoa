@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title th:text="${(categoryName != null ? categoryName : 'Danh mục') + ' - Tiệm Ba Hoa'}">Tiệm Ba Hoa</title>
+        <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body>
+
+        <div th:replace="~{view/header :: body}"></div>
+
+        <div class="container" style="max-width: 1200px; margin: 30px auto; padding: 0 15px; min-height: 50vh;">
+            <div th:id="${'category-' + (cid != null ? cid : '')}" class="category-section">
+                <div class="section-title-wrapper">
+                    <h2 class="section-title"><i class="fas fa-seedling"></i> <span th:text="${categoryName != null ? categoryName : 'Danh Sách Sản Phẩm'}">Tên danh mục</span></h2>
+                </div>
+                
+                <div th:if="${dataProducts == null || dataProducts.isEmpty()}" style="text-align: center; padding: 50px 0; color: #64748b; font-size: 18px;">
+                    <i class="fas fa-box-open" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                    Chưa có sản phẩm nào trong danh mục này.
+                </div>
+                
+                <div th:unless="${dataProducts == null || dataProducts.isEmpty()}">
+                    <div class="product-grid">
+                        <div th:each="o : ${dataProducts}" class="product-item">
+                            <div class="badge-discount" th:if="${o.discount != null && o.discount > 0}" th:text="${'GIẢM ' + o.discount + '%'}">GIẢM 10%</div>
+                            <div class="img-box">
+                                <a th:href="@{/ProductDetail(pid=${o.id})}">
+                                    <img th:src="@{'/images/' + ${o.pimage}}" th:alt="${o.pname}" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=300'"> 
+                                </a>
+                            </div>
+                            <div class="product-details">
+                                <h4 th:title="${o.pname}">
+                                    <a th:href="@{/ProductDetail(pid=${o.id})}" style="text-decoration: none; color: inherit;" th:text="${o.pname}">Tên sản phẩm</a>
+                                </h4>
+                                <div class="price-section">
+                                    <span class="price-discount" th:text="${#numbers.formatDecimal(o.finalPrice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                                    <span class="price-original" th:if="${o.discount != null && o.discount > 0}" th:text="${#numbers.formatDecimal(o.pprice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+                                    <th:block th:if="${o.pstock != null && o.pstock > 0}">
+                                        <form th:action="@{/AddToCart}" method="post" style="margin: 0;">
+                                            <input type="hidden" name="pid" th:value="${o.id}">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn-buy" style="margin-top: 0; width: 100%; border: none; cursor: pointer;">
+                                                <i class="fas fa-shopping-cart"></i> THÊM VÀO GIỎ
+                                            </button>
+                                        </form>
+                                        <a th:href="@{/AddToCart(pid=${o.id},action='buynow')}" class="btn-buynow" style="text-align: center;">
+                                            <i class="fas fa-bolt"></i> MUA NGAY
+                                        </a>
+                                    </th:block>
+                                    <th:block th:unless="${o.pstock != null && o.pstock > 0}">
+                                        <button class="btn-buy" style="margin-top: 0; background: #cbd5e1; cursor: not-allowed; border: none; color: white;" disabled>
+                                            <i class="fas fa-box-open"></i> HẾT HÀNG
+                                        </button>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                </div>
+            </div>
+            
+            <div th:if="${totalPage != null && totalPage > 1}" class="pagination-wrapper" style="margin-top: 40px;">
+                <a th:href="@{/Category(cid=${cid},page=${currentPage - 1})}" th:class="${currentPage <= 1 ? 'pagination-btn disabled' : 'pagination-btn'}"><i class="fas fa-chevron-left"></i> Trước</a>
+                <th:block th:each="pNum : ${#numbers.sequence(1, totalPage)}">
+                    <a th:href="@{/Category(cid=${cid},page=${pNum})}" th:class="${currentPage == pNum ? 'pagination-btn active' : 'pagination-btn'}" th:text="${pNum}">1</a>
+                </th:block>
+                <a th:href="@{/Category(cid=${cid},page=${currentPage + 1})}" th:class="${currentPage >= totalPage ? 'pagination-btn disabled' : 'pagination-btn'}">Sau <i class="fas fa-chevron-right"></i></a>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <div th:replace="~{view/footer :: body}"></div>
+    </body>
+</html>

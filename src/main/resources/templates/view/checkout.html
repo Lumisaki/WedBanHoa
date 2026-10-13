@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanh Toán Đơn Hàng | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/index.css?v=3.0}" href="/css/index.css?v=3.0">
+    <script th:inline="javascript">
+        var subTotalVal = /*[[${subTotal != null ? subTotal : 0}]]*/ 0;
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            var today = new Date().toISOString().split('T')[0];
+            var dateInput = document.querySelector('input[name="delivery_date"]');
+            if (dateInput) {
+                dateInput.setAttribute('min', today);
+            }
+
+            var senderNameInput = document.querySelector('input[name="sender_name"]');
+            if (senderNameInput) {
+                senderNameInput.addEventListener('input', function () {
+                    var hiddenName = document.getElementById("hidden_receiver_name");
+                    if (hiddenName) hiddenName.value = this.value;
+                });
+            }
+            var senderPhoneInput = document.querySelector('input[name="sender_phone"]');
+            if (senderPhoneInput) {
+                senderPhoneInput.addEventListener('input', function () {
+                    var hiddenPhone = document.getElementById("hidden_receiver_phone");
+                    if (hiddenPhone) hiddenPhone.value = this.value;
+                });
+            }
+
+            var checkBox = document.getElementById("is_direct");
+            if (checkBox && checkBox.checked) {
+                toggleReceiverInfo();
+            }
+        });
+
+        function toggleReceiverInfo() {
+            var checkBox = document.getElementById("is_direct");
+            var receiverSection = document.getElementById("receiver_section");
+            var infoMsg = document.getElementById("msg_direct_receiver");
+
+            var receiverInputs = receiverSection.querySelectorAll("input, select");
+            var directInputs = infoMsg.querySelectorAll("input, select");
+
+            if (checkBox.checked) {
+                receiverSection.style.display = "none";
+                infoMsg.style.display = "block";
+                checkBox.value = "true";
+
+                receiverInputs.forEach(input => {
+                    input.removeAttribute("required");
+                    input.disabled = true;
+                });
+
+                directInputs.forEach(input => {
+                    input.setAttribute("required", "");
+                    input.disabled = false;
+                });
+
+                var sName = document.querySelector('input[name="sender_name"]');
+                var sPhone = document.querySelector('input[name="sender_phone"]');
+                if (sName) document.getElementById("hidden_receiver_name").value = sName.value;
+                if (sPhone) document.getElementById("hidden_receiver_phone").value = sPhone.value;
+
+            } else {
+                receiverSection.style.display = "block";
+                infoMsg.style.display = "none";
+                checkBox.value = "false";
+
+                receiverInputs.forEach(input => {
+                    input.setAttribute("required", "");
+                    input.disabled = false;
+                });
+
+                directInputs.forEach(input => {
+                    input.removeAttribute("required");
+                    input.disabled = true;
+                });
+            }
+        }
+
+        let appliedCoupons = [];
+        let totalDiscountPercent = 0;
+
+        function applyCouponCode() {
+            var codeInput = document.getElementById("coupon_input").value.trim().toUpperCase();
+            if (codeInput === "") {
+                alert("Vui lòng điền mã code giảm giá của bạn!");
+                return;
+            }
+            
+            if (appliedCoupons.some(c => c.code === codeInput)) {
+                alert("Mã này đã được áp dụng rồi!");
+                return;
+            }
+
+            fetch("CheckCoupon?code=" + codeInput)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.valid) {
+                        alert("Mã giảm giá không hợp lệ: " + (data.message || ""));
+                        return;
+                    }
+                    var subTotal = parseFloat(subTotalVal);
+                    if (data.min_order_value > 0 && subTotal < data.min_order_value) {
+                        alert("Mã " + codeInput + " yêu cầu đơn hàng tối thiểu " + data.min_order_value.toLocaleString('vi-VN') + "đ. Đơn hiện tại của bạn chưa đủ điều kiện!");
+                        return;
+                    }
+                    var percent = data.discount_percent;
+                    if (percent > 0) {
+                        alert("Chúc mừng! Áp dụng mã " + codeInput + " thành công (giảm " + percent + "%).");
+                        appliedCoupons.push({code: codeInput, percent: percent});
+                        updateCouponUI();
+                        document.getElementById("coupon_input").value = "";
+                    } else {
+                        alert("Mã giảm giá này không tồn tại, viết sai hoặc đã hết hạn sử dụng!");
+                    }
+                })
+                .catch(error => {
+                    console.error("Lỗi AJAX Coupon:", error);
+                });
+        }
+
+        function updateCouponUI() {
+            var couponCodes = appliedCoupons.map(c => c.code).join(",");
+            document.getElementById("applied_coupon_hidden").value = couponCodes;
+            
+            totalDiscountPercent = appliedCoupons.reduce((sum, c) => sum + c.percent, 0);
+            if (totalDiscountPercent > 100) totalDiscountPercent = 100;
+            
+            var subTotal = parseFloat(subTotalVal);
+            var discountAmount = subTotal * (totalDiscountPercent / 100);
+            var newVat = (subTotal - discountAmount) * 0.08;
+            var newGrandTotal = (subTotal - discountAmount) + newVat;
+
+            document.getElementById("discount_row").style.display = totalDiscountPercent > 0 ? "flex" : "none";
+            document.getElementById("discount_cash").innerText = "-" + Math.round(discountAmount).toLocaleString('vi-VN') + "đ (" + totalDiscountPercent + "%)";
+            document.getElementById("vat_cash").innerText = Math.round(newVat).toLocaleString('vi-VN') + "đ";
+            document.getElementById("grand_total_cash").innerText = Math.round(newGrandTotal).toLocaleString('vi-VN') + "đ";
+            
+            let listHtml = "";
+            appliedCoupons.forEach((c, index) => {
+                listHtml += "<div style='display:flex; justify-content:space-between; margin-top:5px; background:#f1f5f9; padding:5px 10px; border-radius:4px; font-size:14px; align-items:center;'>";
+                listHtml += "<span><i class='fas fa-tags' style='color:#10b981; margin-right:5px;'></i> <b>" + c.code + "</b> (-" + c.percent + "%)</span>";
+                listHtml += "<button type='button' style='color:#ef4444; border:none; background:none; cursor:pointer; font-weight:bold;' onclick='removeCoupon(" + index + ")'><i class='fas fa-times'></i> Xóa</button>";
+                listHtml += "</div>";
+            });
+            document.getElementById("applied_coupons_list").innerHTML = listHtml;
+        }
+
+        function removeCoupon(index) {
+            appliedCoupons.splice(index, 1);
+            updateCouponUI();
+        }
+    </script>
+</head>
+<body>
+
+    <div th:replace="~{view/header :: body}"></div>
+
+    <div class="checkout-wrapper">
+
+        <a th:href="@{/cart}" class="btn-nav-navigation" style="margin-bottom: 20px;">
+            <i class="fas fa-arrow-left"></i> Quay lại giỏ hàng
+        </a>
+
+        <div th:if="${session.orderError != null}" class="alert-error-checkout">
+            <i class="fas fa-exclamation-circle" style="font-size: 18px;"></i>
+            <div>
+                <span style="display: block; font-size: 15px; text-transform: uppercase; margin-bottom: 3px;">Đặt hàng thất bại!</span>
+                <span th:text="${session.orderError}"></span>
+            </div>
+        </div>
+
+        <div th:if="${cartList == null || cartList.empty}" class="checkout-card empty-state">
+            <i class="fas fa-shopping-bag"></i>
+            <p>Không có sản phẩm nào để tiến hành thanh toán.</p>
+            <a th:href="@{/index}" class="btn-return-shop">Quay lại mua hàng</a>
+        </div>
+
+        <form th:if="${cartList != null && !cartList.empty}" th:action="@{/PlaceOrder}" method="post" class="checkout-grid">
+            <input type="hidden" id="applied_coupon_hidden" name="applied_coupon" th:value="${session.applied_coupon}">
+
+            <div class="checkout-card">
+
+                <div class="sub-section">
+                    <h3 class="section-title">Thông tin người gửi</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ tên người đặt <span>*</span></label>
+                            <input type="text" name="sender_name" 
+                                   th:value="${session.temp_sender_name != null ? session.temp_sender_name : (session.userSession != null ? session.userSession.fullname : '')}" 
+                                   required placeholder="Họ và tên người đặt hoa">
+                        </div>
+                        <div class="form-group">
+                            <label>Điện thoại liên hệ <span>*</span></label>
+                            <input type="text" name="sender_phone" 
+                                   th:value="${session.temp_sender_phone != null ? session.temp_sender_phone : (session.userSession != null ? session.userSession.phone : '')}" 
+                                   required placeholder="Số điện thoại của bạn">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Email nhận hóa đơn <span>*</span></label>
+                            <input type="email" name="sender_email" 
+                                   th:value="${session.temp_sender_email != null ? session.temp_sender_email : (session.userSession != null ? session.userSession.email : '')}" 
+                                   required placeholder="Địa chỉ email nhận thông tin đơn hàng">
+                        </div>
+                    </div>
+                </div>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="is_direct" name="is_direct_receiver" value="false" onchange="toggleReceiverInfo()" 
+                           th:checked="${session.temp_is_direct == 'true'}">
+                    <i class="fas fa-shipping-fast"></i> Tôi là người nhận hoa trực tiếp (Hệ thống sẽ giao đến địa chỉ của tôi bên dưới)
+                </label>
+
+                <div id="msg_direct_receiver" class="msg-direct">
+                    <i class="fas fa-check-circle"></i> Bạn đã chọn tự nhận hoa trực tiếp.
+
+                    <input type="hidden" id="hidden_receiver_name" name="receiver_name" disabled th:value="${session.temp_receiver_name}">
+                    <input type="hidden" id="hidden_receiver_phone" name="receiver_phone" disabled th:value="${session.temp_receiver_phone}">
+
+                    <div class="form-row" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>Tỉnh, Thành phố <span>*</span></label>
+                            <select name="receiver_city" disabled>
+                                <option value="Hà Nội" th:selected="${session.temp_receiver_city == 'Hà Nội'}">Hà Nội</option>
+                                <option value="Hồ Chí Minh" th:selected="${session.temp_receiver_city == 'Hồ Chí Minh'}">TP. Hồ Chí Minh</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quận, Huyện <span>*</span></label>
+                            <input type="text" name="receiver_district" placeholder="Nhập Quận, Huyện..." disabled th:value="${session.temp_receiver_district}">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>Địa chỉ giao hoa chính xác của bạn <span>*</span></label>
+                        <input type="text" name="receiver_address" placeholder="Số nhà, tên đường để shipper giao hoa đến" disabled th:value="${session.temp_receiver_address}">
+                    </div>
+                </div>
+
+                <div id="receiver_section" class="sub-section">
+                    <h3 class="section-title">Thông tin người nhận thứ ba</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ tên người nhận <span>*</span></label>
+                            <input type="text" name="receiver_name" required placeholder="Họ và tên người nhận hoa" th:value="${session.temp_receiver_name}">
+                        </div>
+                        <div class="form-group">
+                            <label>Điện thoại người nhận <span>*</span></label>
+                            <input type="text" name="receiver_phone" required placeholder="Số điện thoại liên hệ nhận hoa" th:value="${session.temp_receiver_phone}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Địa chỉ nhận hoa chính xác <span>*</span></label>
+                            <input type="text" name="receiver_address" required placeholder="Số nhà, tên đường, tên tòa nhà..." th:value="${session.temp_receiver_address}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tỉnh, thành phố <span>*</span></label>
+                            <select name="receiver_city" required>
+                                <option value="Hà Nội" th:selected="${session.temp_receiver_city == 'Hà Nội'}">Hà Nội</option>
+                                <option value="Hồ Chí Minh" th:selected="${session.temp_receiver_city == 'Hồ Chí Minh'}">TP. Hồ Chí Minh</option>
+                                <option value="Đà Nẵng" th:selected="${session.temp_receiver_city == 'Đà Nẵng'}">Đà Nẵng</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quận / Huyện <span>*</span></label>
+                            <input type="text" name="receiver_district" required placeholder="Nhập Quận, Huyện..." th:value="${session.temp_receiver_district}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h3 class="section-title">Thời gian giao hoa & Lời nhắn thiệp</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ngày giao hàng <span>*</span></label>
+                            <input type="date" name="delivery_date" required th:value="${session.temp_delivery_date}">
+                        </div>
+                        <div class="form-group">
+                            <label>Thời gian giao hàng <span>*</span></label>
+                            <select name="delivery_time" required>
+                                <option value="Từ 07:00 - 09:00" th:selected="${session.temp_delivery_time == 'Từ 07:00 - 09:00'}">Từ 07:00 - 09:00 AM</option>
+                                <option value="Từ 09:00 - 12:00" th:selected="${session.temp_delivery_time == 'Từ 09:00 - 12:00'}">Từ 09:00 - 12:00 AM</option>
+                                <option value="Từ 13:00 - 16:00" th:selected="${session.temp_delivery_time == 'Từ 13:00 - 16:00'}">Từ 13:00 - 16:00 PM</option>
+                                <option value="Từ 16:00 - 20:00" th:selected="${session.temp_delivery_time == 'Từ 16:00 - 20:00'}">Từ 16:00 - 20:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Lời nhắn tặng kèm thiệp (Thiệp chúc mừng đi kèm miễn phí)</label>
+                            <textarea name="card_message" rows="3" placeholder="Nhập câu chữ chúc mừng viết lên thiệp gửi người nhận..." th:text="${session.temp_card_message}"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sub-section" style="margin-bottom: 0;">
+                    <h3 class="section-title">Yêu cầu, lưu ý [cho Tiệm Ba Hoa]</h3>
+                    <div class="form-group full-width">
+                        <textarea name="special_requests" rows="3" placeholder="Nhập các yêu cầu lưu ý đặc biệt tại đây để florist lưu tâm khi cắm bông và shipper lưu ý khi đi đường..." th:text="${session.temp_special_requests}"></textarea>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="checkout-card">
+                <h3 class="section-title">Chi tiết đơn hàng</h3>
+
+                <div class="order-summary-list">
+                    <th:block th:each="item : ${cartList}">
+                        <div class="summary-item">
+                            <img th:src="@{'/images/' + ${item.pimage}}" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'">
+                            <div class="summary-info">
+                                <span class="summary-name" th:text="${item.pname}"></span>
+                                <span class="summary-qty">Số lượng: <span th:text="${item.quantity != null ? item.quantity : item.sold}"></span></span>
+                            </div>
+                            <div class="summary-right">
+                                <span class="summary-price">
+                                    <span th:if="${item.discount != null && item.discount > 0}" th:text="${#numbers.formatDecimal(item.pprice * (1 - item.discount / 100.0) * (item.quantity != null ? item.quantity : item.sold), 0, 'COMMA', 0, 'POINT') + 'đ'}"></span>
+                                    <span th:unless="${item.discount != null && item.discount > 0}" th:text="${#numbers.formatDecimal(item.pprice * (item.quantity != null ? item.quantity : item.sold), 0, 'COMMA', 0, 'POINT') + 'đ'}"></span>
+                                </span>
+                                <a th:href="@{/RemoveFromCart(pid=${item.id}, from='checkout')}" class="btn-remove-item" title="Bỏ hoa này" onclick="return confirm('Bạn muốn gỡ bông hoa này khỏi đơn hàng?')">&times;</a>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+
+                <div class="coupon-box-checkout">
+                    <span class="coupon-label">Mã giảm giá:</span>
+                    <input type="text" id="coupon_input" placeholder="Nhập mã giảm giá...">
+                    <button type="button" onclick="applyCouponCode()">Áp dụng</button>
+                </div>
+                <div id="applied_coupons_list" style="margin-bottom: 15px;"></div>
+
+                <div class="price-row">
+                    <span>Tổng phụ đơn hàng:</span>
+                    <span th:text="${#numbers.formatDecimal(subTotal != null ? subTotal : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span>
+                </div>
+
+                <div class="price-row" id="discount_row" style="display: none; color: #ff4757; font-weight: 600;">
+                    <span>Tiền giảm từ Coupon:</span>
+                    <span id="discount_cash">-0đ</span>
+                </div>
+
+                <div class="price-row">
+                    <span>Thuế giá trị gia tăng VAT (8%):</span>
+                    <span id="vat_cash" th:text="${#numbers.formatDecimal(vat != null ? vat : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span>
+                </div>
+
+                <div class="price-row grand-total">
+                    <span>Tổng tiền thanh toán chốt:</span>
+                    <span id="grand_total_cash" th:text="${#numbers.formatDecimal(grandTotal != null ? grandTotal : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span>
+                </div>
+
+                <button type="submit" class="btn-submit-order">
+                    <i class="fas fa-lock"></i> XÁC NHẬN THANH TOÁN ĐƠN
+                </button>
+            </div>
+
+        </form>
+    </div>
+    <div th:replace="~{view/footer :: body}"></div> 
+
+</body>
+</html>

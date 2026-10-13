@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Đơn Hàng | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+</head>
+<body>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1>Trang Quản Trị Hệ Thống</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div id="content-main">
+                <div th:if="${session.msgSuccess != null}" class="alert alert-success"><i class="fas fa-check-circle"></i> <span th:text="${session.msgSuccess}"></span></div>
+                <div th:if="${session.msgError != null}" class="alert alert-error"><i class="fas fa-times-circle"></i> <span th:text="${session.msgError}"></span></div>
+
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-list-ul" style="color: #d63384; margin-right: 8px;"></i> Danh Sách Toàn Bộ Đơn Đặt Hoa</h3>
+                    </div>
+                    
+                    <div class="admin-search-wrapper">
+                        <div class="admin-search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                        </div>
+                    </div>
+                    
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Mã Đơn</th>
+                                <th style="width: 25%;">Thông tin Giao Dịch</th>
+                                <th style="width: 15%;">Tổng Tiền & Hình thức</th>
+                                <th style="width: 35%;">Cập Nhật Trạng Thái</th>
+                                <th style="width: 10%; text-align: center;">Chi Tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <th:block th:each="o : ${allOrders}">
+                                <tr>
+                                    <td>
+                                        <span class="bold-text" style="font-size: 15px;">#<span th:text="${o.order_id}"></span></span><br>
+                                        <span style="font-size: 12px; color: #94a3b8;" th:text="${o.order_date}"></span>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 13px;"><i class="fas fa-user" style="color: #64748b;"></i> Người đặt: <strong style="color: #1e293b;" th:text="${o.sender_name}"></strong></div>
+                                        <div style="margin-top: 5px; font-size: 13px;"><i class="fas fa-gift" style="color:#d63384;"></i> Nhận hàng: <strong style="color: #1e293b;" th:text="${o.receiver_name}"></strong></div>
+                                    </td>
+                                    <td>
+                                        <div class="price-text" th:text="${#numbers.formatDecimal(o.total_price != null ? o.total_price : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></div>
+                                        <div style="margin-top: 5px;"><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: #475569;" th:text="${o.payment_method}"></span></div>
+                                    </td>
+                                    
+                                    <td>
+                                        <form th:action="@{/UpdateOrderStatus}" method="post" class="flex-row-action">
+                                            <input type="hidden" name="orderId" th:value="${o.order_id}">
+                                            
+                                            <select name="status" style="padding: 8px 10px; border-radius: 6px;">
+                                                <option value="Pending" th:selected="${o.status == 'Pending'}">Chờ Duyệt</option>
+                                                <option value="Processing" th:selected="${o.status == 'Processing'}">Đang Cắm/Giao</option>
+                                                <option value="Completed" th:selected="${o.status == 'Completed'}">Hoàn Thành</option>
+                                                <option value="Cancelled" th:selected="${o.status == 'Cancelled'}">Hủy đơn</option>
+                                            </select>
+                                            <button type="submit" class="btn-update" style="padding: 8px 15px;"><i class="fas fa-save"></i> LƯU</button>
+                                        </form>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <a th:href="@{/AdminOrderDetail(orderId=${o.order_id})}" class="btn-view" style="background:#4f46e5; color:white; margin: 0; padding: 8px 12px;"><i class="fas fa-eye"></i> XEM</a>
+                                    </td>
+                                </tr>
+                            </th:block>
+                            <tr th:if="${allOrders == null || allOrders.empty}">
+                                <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">Hệ thống chưa có đơn đặt hàng nào!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div th:if="${totalPages != null && totalPages > 1}" class="pagination-wrapper">
+                        <a th:href="@{${pageUrlPattern} + ${currentPage - 1}}" th:classappend="${currentPage == 1 ? 'disabled' : ''}" class="pagination-btn"><i class="fas fa-chevron-left"></i> Lùi</a>
+                        <th:block th:each="pNum : ${#numbers.sequence(1, totalPages)}">
+                            <a th:href="@{${pageUrlPattern} + ${pNum}}" th:classappend="${currentPage == pNum ? 'active' : ''}" th:text="${pNum}" class="pagination-btn"></a>
+                        </th:block>
+                        <a th:href="@{${pageUrlPattern} + ${currentPage + 1}}" th:classappend="${currentPage == totalPages ? 'disabled' : ''}" class="pagination-btn">Tiến <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+
+        </div>
+    </div>
+
+    <script th:src="@{/js/admin-search.js}"></script>
+</body>
+</html>

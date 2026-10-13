@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="body">
+<link rel="stylesheet" th:href="@{/css/header.css}" href="/css/header.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="top-bar">
+    <div class="container row">
+        <span>HOTLINE: 0789273903</span>
+        <div class="top-links">
+            <ul class="user-nav">
+                <!-- Khi đã đăng nhập -->
+                <li th:if="${session.userSession != null}" class="dropdown">
+                    <a href="#" class="user-active">
+                        <i class="fa fa-user-circle"></i> <span th:text="${session.userSession.fullname != null ? session.userSession.fullname : session.userSession.email}"></span> 
+                        <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-content">
+                        <li th:if="${session.userSession.roleId == 1}"><a th:href="@{/AdminDashboard}"><i class="fa fa-user-shield"></i> Trang quản trị</a></li>
+                        <li th:unless="${session.userSession.roleId == 1}"><a th:href="@{/profilm}"><i class="fa fa-id-card"></i> Hồ sơ</a></li>
+                        <li><a th:href="@{/Logout}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                    </ul>
+                </li>
+
+                <!-- Khi chưa đăng nhập -->
+                <li th:unless="${session.userSession != null}" class="dropdown">
+                    <a href="#">Tài khoản <i class="fa fa-caret-down"></i></a>
+                    <ul class="dropdown-content">
+                        <li><a th:href="@{/Login}">Đăng nhập</a></li>
+                        <li><a th:href="@{/Register}">Đăng ký</a></li>
+                    </ul>
+                </li>
+                
+                <li><a th:href="@{/cart}">Giỏ hàng</a></li>
+                <li><a th:href="@{/checkout}">Thanh toán</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<header class="header-wrapper">
+    <div class="container header-main">
+        <div class="header-col col-left">
+            <div class="social">
+                <a href="#" class="social-icon fb"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="social-icon tw"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-icon ig"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+
+        <div class="header-col col-center">
+            <a th:href="@{/index}" class="logo-link">
+                <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="Logo" class="logo-img">
+                <div class="logo-text">
+                    <span class="main-title">TIỆM BA HOA</span>
+                    <span class="slogan">RẺ NHƯ CHO - CHẤT LƯỢNG CHẤTTT</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="header-col col-right">
+            <div class="search-and-cart">
+                <form th:action="@{/Search}" method="get" class="search-box-v3">
+                    <input type="text" name="keyword" placeholder="Tìm kiếm hoa..." th:value="${searchKeyword}">
+                    <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+                </form>
+
+                <div class="cart-wrapper-header">
+                    <a th:href="@{/cart}" class="cart-icon-btn">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-badge-count" th:text="${session.cart != null ? session.cart.size() : 0}">0</span>
+                    </a>
+
+                    <div class="mini-cart-dropdown">
+                        <div th:if="${session.cart == null || session.cart.isEmpty()}" class="mini-cart-empty">
+                            <i class="fas fa-shopping-basket" style="font-size: 40px; color: #e2e8f0; margin-bottom: 15px; display: block;"></i>
+                            Giỏ hàng của bạn đang trống!
+                        </div>
+                        <div th:unless="${session.cart == null || session.cart.isEmpty()}">
+                            <div class="mini-cart-header">
+                                <span>Sản phẩm đã thêm</span>
+                                <span style="color: #d63384;" th:text="${session.cart.size() + ' Món'}">0 Món</span>
+                            </div>
+                            <div class="mini-cart-list" th:if="${cartProducts != null}">
+                                <div th:each="entry : ${session.cart}" th:with="flower=${cartProducts.get(entry.key)}" th:if="${flower != null}" class="mini-cart-item">
+                                    <img th:src="@{'/images/' + ${flower.pimage}}" class="mini-cart-img" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'">
+                                    <div class="mini-cart-info">
+                                        <span class="mini-cart-name" th:text="${flower.pname}">Tên hoa</span>
+                                        <div>
+                                            <span class="mini-cart-price" th:text="${#numbers.formatDecimal(flower.finalPrice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                                            <span class="mini-cart-qty" th:text="${' x ' + entry.value}"> x 1</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mini-cart-footer">
+                                <a th:href="@{/cart}" class="btn-view-cart">XEM CHI TIẾT GIỎ HÀNG <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ===== PROMO BAR ===== -->
+<div class="promo-bar">
+    <i class="fas fa-bolt" style="color: #fbbf24;"></i> ĐẶT HOA NHANH - GIAO HỎA TỐC 60 PHÚT - HOTLINE: 0789 273 903
+</div>
+
+<!-- ===== THANH MENU DANH MỤC DÙNG CHUNG ===== -->
+<div class="nav-overlay" id="nav-overlay" onclick="closeNavMenu()"></div>
+<nav class="nav-container">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleNavMenu()" aria-label="Menu">
+        <i class="fas fa-bars" id="hamburger-icon"></i>
+    </button>
+    <ul class="nav-list" id="nav-list">
+        <li><a th:href="@{/index}">Trang chủ</a></li>
+        <th:block th:each="cat : ${listCategories}">
+            <li><a th:href="@{/Category(cid=${cat.cid},page=1)}" th:text="${cat.cname}">Danh mục</a></li>
+        </th:block>
+        <li><a th:href="@{/index#discount-section}" class="hot-sale"><i class="fas fa-fire"></i> Giảm Giá Sốc</a></li>
+    </ul>
+</nav>
+<script>
+    function toggleNavMenu() {
+        var nav = document.getElementById('nav-list');
+        var overlay = document.getElementById('nav-overlay');
+        var icon = document.getElementById('hamburger-icon');
+        nav.classList.toggle('open');
+        overlay.classList.toggle('open');
+        icon.className = nav.classList.contains('open') ? 'fas fa-times' : 'fas fa-bars';
+    }
+    function closeNavMenu() {
+        var nav = document.getElementById('nav-list');
+        var overlay = document.getElementById('nav-overlay');
+        var icon = document.getElementById('hamburger-icon');
+        nav.classList.remove('open');
+        overlay.classList.remove('open');
+        icon.className = 'fas fa-bars';
+    }
+</script>
+</div>
+</body>
+</html>

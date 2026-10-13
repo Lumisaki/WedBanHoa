@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Phương Thức Thanh Toán | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/index.css?v=4.0}" href="/css/index.css?v=4.0">
+</head>
+<body>
+
+    <div th:replace="~{view/header :: body}"></div>
+
+    <div class="payment-wrapper">
+        <a th:href="@{/checkout}" class="btn-nav-navigation" style="margin-bottom: 20px;">
+            <i class="fas fa-arrow-left"></i> Quay lại thanh toán
+        </a>
+        <div class="payment-card">
+            <h2><i class="fas fa-wallet"></i> Chọn Phương Thức Thanh Toán</h2>
+            
+            <form th:action="@{/payment}" method="post">
+
+                <input type="hidden" name="orderId" th:value="${order != null ? order.order_id : ''}">
+                
+                <label class="payment-method-option">
+                    <input type="radio" name="paymentMethod" value="COD" th:checked="${isDirect == 'true' || isDirect == null}" required>
+                    <div class="method-text-block">
+                        <span class="method-title-span">Thanh toán tiền mặt khi nhận hoa (COD)</span>
+                        <span class="method-desc-p">Thanh toán trực tiếp cho shipper khi hoa được giao đến tận tay bạn.</span>
+                    </div>
+                    <div class="method-icon-div"><i class="fas fa-hand-holding-usd" style="color: #10b981;"></i></div>
+                </label>
+
+                <label class="payment-method-option">
+                    <input type="radio" name="paymentMethod" value="Online" th:checked="${isDirect == 'false'}" required>
+                    <div class="method-text-block">
+                        <span class="method-title-span">Chuyển khoản Ngân hàng Online quét mã QR</span>
+                        <span class="method-desc-p">An toàn, bảo mật và nhanh chóng. Phù hợp tuyệt đối khi bạn đặt cắm hoa gửi tặng bạn bè, người thân.</span>
+                    </div>
+                    <div class="method-icon-div"><i class="fas fa-qrcode" style="color: #d63384;"></i></div>
+                </label>
+
+                <div id="qr_container" th:style="${isDirect == 'false' ? 'display: block;' : 'display: none;'}">
+                    <p class="qr-msg-highlight"><i class="fas fa-info-circle"></i> Vui lòng mở ứng dụng ngân hàng quét mã QR để thanh toán:</p>
+                    <img th:src="@{/images/thanhtoan.jpg}" alt="Mã QR Thanh Toán" class="qr-img-payment" onerror="this.src='https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=300'">
+                    <p class="qr-caption">Nội dung chuyển khoản: <strong>Đóng tiền đơn hoa <span th:text="${order != null ? order.order_id : ''}"></span></strong></p>
+                </div>
+
+                <div class="payment-summary-box">
+                    <span>Tổng tiền cần thanh toán:</span>
+                    <strong th:text="${order != null && order.total_price != null ? #numbers.formatDecimal(order.total_price, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}"></strong>
+                </div>
+
+                <button type="submit" class="btn-complete-payment">
+                    HOÀN TẤT ĐẶT HÀNG <i class="fas fa-check-circle"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                var qrBox = document.getElementById('qr_container');
+                if (this.value === 'Online') {
+                    qrBox.style.display = 'block';
+                } else {
+                    qrBox.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    <div th:replace="~{view/footer :: body}"></div> 
+
+</body>
+</html>

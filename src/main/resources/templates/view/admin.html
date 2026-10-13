@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1>Trang Quản Trị Hệ Thống</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+
+            <div id="content-main">
+                <div class="card-grid">
+                    <div class="card-stat">
+                        <div class="stat-info">
+                            <h3>Tổng doanh thu</h3>
+                            <p th:text="${totalRevenue != null ? #numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}"></p> 
+                        </div>
+                        <div class="stat-icon" style="background: #eef2ff; color: #4f46e5;"><i class="fas fa-dollar-sign"></i></div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="stat-info">
+                            <h3>Đơn hàng</h3>
+                            <p th:text="${totalOrders != null ? totalOrders : 0}"></p> 
+                        </div>
+                        <div class="stat-icon" style="background: #fff7ed; color: #ea580c;"><i class="fas fa-shopping-bag"></i></div>
+                    </div>
+                    <div class="card-stat">
+                        <div class="stat-info">
+                            <h3>Sản phẩm</h3>
+                            <p th:text="${allProducts != null ? allProducts.size() : 0}"></p> 
+                        </div>
+                        <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;"><i class="fas fa-leaf"></i></div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-header" style="display: block; padding-bottom: 0;">
+                        <h3 style="margin-bottom: 20px;"><i class="fas fa-list" style="color: #d63384; margin-right: 8px;"></i> Danh Sách Sản Phẩm Hệ Thống</h3>
+
+                        <form th:action="@{/AdminDashboard}" method="get" style="display: flex; gap: 10px; align-items: center; width: 100%; margin-bottom: 20px;">
+                            <input type="text" name="keyword" th:value="${currentKeyword}" placeholder="Nhập tên hoa cần tìm..." style="flex: 2; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #f8fafc;" onkeyup="filterAdminTable(this)">
+
+                            <select name="category" style="flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #f8fafc;">
+                                <option value="all">-- Tất cả danh mục --</option>
+                                <th:block th:each="c : ${listCC}">
+                                    <option th:value="${c.cid}" th:text="${c.cname}" th:selected="${currentCategory != null && currentCategory != 'all' && currentCategory == '' + c.cid}"></option>
+                                </th:block>
+                            </select>
+
+                            <select name="sort" style="flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #f8fafc;">
+                                <option value="default" th:selected="${currentSort == 'default'}">Sắp xếp: Mặc định</option>
+                                <option value="bestseller" th:selected="${currentSort == 'bestseller'}">Bán chạy nhất</option>
+                                <option value="price_asc" th:selected="${currentSort == 'price_asc'}">Giá (Thấp -> Cao)</option>
+                                <option value="price_desc" th:selected="${currentSort == 'price_desc'}">Giá (Cao -> Thấp)</option>
+                            </select>
+
+                            <button type="submit" style="background: #1e293b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;"><i class="fas fa-filter"></i> Lọc</button>
+                            <a th:href="@{/AdminDashboard}" style="background: #f1f5f9; color: #475569; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #cbd5e1;"><i class="fas fa-sync-alt"></i></a>
+                        </form>
+                    </div>
+
+                    <table style="width: 100%; white-space: nowrap;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Hình ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Giá gốc</th>
+                                <th>Giảm giá</th>
+                                <th>Giá sau giảm</th>
+                                <th>Kho hàng</th>
+                                <th style="text-align: center;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <th:block th:each="p : ${allProducts}">
+                                <tr>
+                                    <td style="color: #94a3b8; font-weight: bold;">#<span th:text="${p.id}"></span></td>
+                                    <td><img th:src="@{'/images/' + ${p.pimage}}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'"></td>                 
+                                    <td style="font-weight: 600; white-space: normal;" th:text="${p.pname}"></td>
+                                    <td style="color: #64748b; text-decoration: line-through;" th:text="${#numbers.formatDecimal(p.pprice, 0, 'COMMA', 0, 'POINT') + 'đ'}"></td>
+                                    <td><span style="background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 4px; font-weight: bold;" th:text="'-' + ${p.discount} + '%'"></span></td>
+                                    <td style="color: #10b981; font-weight: bold;" th:text="${#numbers.formatDecimal(p.pprice * (1 - p.discount / 100.0), 0, 'COMMA', 0, 'POINT') + 'đ'}"></td>
+                                    <td><span style="background: #e3fcef; color: #00875a; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;" th:text="${p.pstock} + ' cây'"></span></td>
+                                    <td style="text-align: center;">
+                                        <a th:href="@{/AdminProductReviews(pid=${p.id})}" style="background: #d63384; color: white; text-decoration: none; font-weight: bold; font-size: 12px; padding: 8px 15px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(214, 51, 132, 0.2);">
+                                            <i class="fas fa-star"></i> Xem đánh giá
+                                        </a>
+                                    </td>
+                                </tr>
+                            </th:block>
+                            <tr th:if="${allProducts == null || allProducts.empty}"><td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;"><i class="fas fa-search" style="font-size: 40px; margin-bottom: 10px; opacity: 0.5; display:block;"></i> Không tìm thấy sản phẩm phù hợp.</td></tr>
+                        </tbody>
+                    </table>
+                    
+                    <div th:if="${totalPages != null && totalPages > 1}" class="pagination-wrapper">
+                        <a th:href="@{${pageUrlPattern} + ${currentPage - 1}}" th:classappend="${currentPage == 1 ? 'disabled' : ''}" class="pagination-btn"><i class="fas fa-chevron-left"></i> Lùi</a>
+                        <th:block th:each="pNum : ${#numbers.sequence(1, totalPages)}">
+                            <a th:href="@{${pageUrlPattern} + ${pNum}}" th:classappend="${currentPage == pNum ? 'active' : ''}" th:text="${pNum}" class="pagination-btn"></a>
+                        </th:block>
+                        <a th:href="@{${pageUrlPattern} + ${currentPage + 1}}" th:classappend="${currentPage == totalPages ? 'disabled' : ''}" class="pagination-btn">Tiến <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        window.addEventListener('DOMContentLoaded', function () {
+            /*[# th:if="${session.msgSuccess != null}"]*/
+            Swal.fire({icon: 'success', title: 'Thành công!', text: /*[[${session.msgSuccess}]]*/ '', confirmButtonColor: '#10b981'});
+            /*[/]*/
+            /*[# th:if="${session.msgError != null}"]*/
+            Swal.fire({icon: 'error', title: 'Lỗi thao tác!', text: /*[[${session.msgError}]]*/ '', confirmButtonColor: '#ef4444'});
+            /*[/]*/
+        });
+    </script>
+    <script th:src="@{/js/admin-search.js}"></script>
+</body>
+</html>

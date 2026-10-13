@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Khách Hàng | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+</head>
+<body>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1>Trang Quản Trị Hệ Thống</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div id="content-main">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-user-friends" style="color: #d63384; margin-right: 8px;"></i> Danh Sách Khách Hàng</h3>
+                    </div>
+                    
+                    <th:block th:if="${listC != null && !listC.empty}">
+                        <div class="admin-search-wrapper">
+                            <div class="admin-search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Thông tin khách hàng</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Địa chỉ</th>
+                                    <th style="text-align: center;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <th:block th:each="c : ${listC}">
+                                    <tr>
+                                        <td style="font-weight: bold; color: #94a3b8;">#<span th:text="${c.userId}"></span></td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <img th:src="@{'https://ui-avatars.com/api/?name=' + ${c.fullname} + '&background=random&color=fff'}" style="width: 40px; height: 40px; border-radius: 50%;">
+                                                <div>
+                                                    <div style="font-weight: bold; color: #2d3436;" th:text="${c.fullname}"></div>
+                                                    <div style="font-size: 12px; color: #64748b;" th:text="${c.email}"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span th:if="${c.phone != null && !c.phone.empty}" th:text="${c.phone}"></span>
+                                            <span th:unless="${c.phone != null && !c.phone.empty}" style="color:#cbd5e1; font-style: italic;">Chưa cập nhật</span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${c.address != null && !c.address.empty}" th:text="${c.address}"></span>
+                                            <span th:unless="${c.address != null && !c.address.empty}" style="color:#cbd5e1; font-style: italic;">Chưa cập nhật</span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <a th:href="@{/CustomerDetail(id=${c.userId}, tab='info')}" class="btn-view" style="background:#e0f2fe; color:#0284c7;"><i class="fas fa-info-circle"></i> Hồ sơ</a>
+                                            <a th:href="@{/CustomerDetail(id=${c.userId}, tab='history')}" class="btn-view" style="background:#fce7f3; color:#db2777;"><i class="fas fa-shopping-cart"></i> Lịch sử mua</a>
+                                        </td>
+                                    </tr>
+                                </th:block>
+                            </tbody>
+                        </table>
+                        <div th:if="${totalPages != null && totalPages > 1}" class="pagination-wrapper">
+                            <a th:href="@{${pageUrlPattern} + ${currentPage - 1}}" th:classappend="${currentPage == 1 ? 'disabled' : ''}" class="pagination-btn"><i class="fas fa-chevron-left"></i> Lùi</a>
+                            <th:block th:each="pNum : ${#numbers.sequence(1, totalPages)}">
+                                <a th:href="@{${pageUrlPattern} + ${pNum}}" th:classappend="${currentPage == pNum ? 'active' : ''}" th:text="${pNum}" class="pagination-btn"></a>
+                            </th:block>
+                            <a th:href="@{${pageUrlPattern} + ${currentPage + 1}}" th:classappend="${currentPage == totalPages ? 'disabled' : ''}" class="pagination-btn">Tiến <i class="fas fa-chevron-right"></i></a>
+                        </div>
+                    </th:block>
+                    
+                    <div th:unless="${listC != null && !listC.empty}" style="text-align: center; padding: 50px; color: #94a3b8;">
+                        <i class="fas fa-users-slash" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+                        Chưa có khách hàng nào đăng ký hệ thống!
+                    </div>
+                </div>
+            </div>
+
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/admin-search.js}"></script>
+</body>
+</html>

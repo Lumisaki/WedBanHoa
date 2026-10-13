@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tài Khoản Của Tôi | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        function switchTab(tabId, element) {
+            var tabs = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove("active"); }
+            document.getElementById(tabId).classList.add("active");
+
+            var menuItems = document.getElementsByClassName("menu-item-prof");
+            for (var j = 0; j < menuItems.length; j++) { menuItems[j].classList.remove("active"); }
+            element.classList.add("active");
+
+            var alerts = document.getElementsByClassName("alert");
+            for (var k = 0; k < alerts.length; k++) { alerts[k].style.display = "none"; }
+        }
+    </script>
+</head>
+<body>
+
+    <div th:replace="~{view/header :: body}"></div>
+
+    <div class="profilm-container">
+        <a th:href="@{/index}" class="btn-nav-top-right"><i class="fas fa-arrow-left"></i> Trở về trang chủ</a>
+        
+        <div th:if="${session.message != null}" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-weight: bold;">
+            <i class="fas fa-check-circle"></i> <span th:text="${session.message}">Thông báo</span>
+        </div>
+        <div th:if="${session.error != null}" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-weight: bold;">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${session.error}">Lỗi</span>
+        </div>
+
+        <div class="prof-grid">
+            <div class="prof-sidebar">
+                <div class="prof-avatar">
+                    <i class="fas fa-user-circle"></i>
+                    <h3><span th:text="${session.userSession != null ? (session.userSession.fullname != null ? session.userSession.fullname : 'Khách hàng') : ''}">Tên</span></h3>
+                    <p><span th:text="${session.userSession != null ? session.userSession.email : ''}">Email</span></p>
+                </div>
+                <div id="menu-info" class="menu-item-prof active" onclick="switchTab('tab-info', this)">
+                    <i class="fas fa-th-large"></i> Tài khoản của tôi
+                </div>
+                <div id="menu-edit" class="menu-item-prof" onclick="switchTab('tab-edit', this)">
+                    <i class="fas fa-user-cog"></i> Chỉnh sửa hồ sơ
+                </div>
+                <div id="menu-pass" class="menu-item-prof" onclick="switchTab('tab-password', this)">
+                    <i class="fas fa-unlock-alt"></i> Đổi Mật khẩu
+                </div>
+                <div id="menu-orders" class="menu-item-prof" onclick="switchTab('tab-orders', this)">
+                    <i class="fas fa-history"></i> Lịch sử đơn hàng
+                </div>
+                <a th:href="@{/Logout}" class="menu-item-prof" style="color: #ff4757; border-top: 1px solid #f1f5f9; margin-top: 10px;">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất tài khoản
+                </a>
+            </div>
+
+            <div class="prof-main">
+                <div id="tab-info" class="tab-content active">
+                    <h2 class="tab-title">Thông tin chung</h2>
+                    <div class="info-card">
+                        <p><strong>Họ và tên:</strong> <span th:text="${session.userSession != null && session.userSession.fullname != null ? session.userSession.fullname : 'Chưa cập nhật'}">Họ tên</span></p>
+                        <p><strong>Số điện thoại:</strong> <span th:text="${session.userSession != null && session.userSession.phone != null ? session.userSession.phone : 'Chưa cập nhật'}">SĐT</span></p>
+                        <p><strong>Địa chỉ:</strong> <span th:text="${session.userSession != null && session.userSession.address != null ? session.userSession.address : 'Chưa cập nhật'}">Địa chỉ</span></p>
+                    </div>
+                    <div class="stat-card" style="margin-top: 25px;">
+                        <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+                        <div>
+                            <h4 style="margin: 0; color: #1e293b; font-size: 15px;">Tổng chi tiêu tích lũy</h4>
+                            <p class="stat-number" th:text="${#numbers.formatDecimal(totalMoney != null ? totalMoney : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</p>
+                            <span style="font-size: 12px; color: #94a3b8; font-style: italic;">(Chỉ tính các đơn hàng Đã Nhận Hoa & Thanh Toán)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-edit" class="tab-content">
+                    <h2 class="tab-title">Cập nhật hồ sơ</h2>
+                    <form th:action="@{/UpdateProfile}" method="post">
+                        <div class="form-group-prof">
+                            <label>Họ và tên</label>
+                            <input type="text" name="fullname" th:value="${session.userSession != null ? session.userSession.fullname : ''}" required>
+                        </div>
+                        <div class="form-group-prof">
+                            <label>Số điện thoại</label>
+                            <input type="text" name="phone" th:value="${session.userSession != null ? session.userSession.phone : ''}" required>
+                        </div>
+                        <div class="form-group-prof">
+                            <label>Địa chỉ</label>
+                            <input type="text" name="address" th:value="${session.userSession != null ? session.userSession.address : ''}" required>
+                        </div>
+                        <button type="submit" class="btn-save-prof"><i class="fas fa-save"></i> LƯU THAY ĐỔI</button>
+                    </form>
+                </div>
+
+                <div id="tab-password" class="tab-content">
+                    <h2 class="tab-title">Đổi mật khẩu bảo mật</h2>
+                    <form th:action="@{/ChangePassword}" method="post">
+                        <div class="form-group-prof">
+                            <label>Mật khẩu hiện tại</label>
+                            <input type="password" name="oldPass" required>
+                        </div>
+                        <div class="form-group-prof">
+                            <label>Mật khẩu mới</label>
+                            <input type="password" name="newPass" required>
+                        </div>
+                        <div class="form-group-prof">
+                            <label>Xác nhận mật khẩu mới</label>
+                            <input type="password" name="reNewPass" required>
+                        </div>
+                        <button type="submit" class="btn-save-prof"><i class="fas fa-key"></i> XÁC NHẬN ĐỔI MẬT KHẨU</button>
+                    </form>
+                </div>
+
+                <div id="tab-orders" class="tab-content">
+                    <h2 class="tab-title">Lịch sử đặt hoa của bạn</h2>
+                    <div th:if="${listOrder != null && !listOrder.isEmpty()}">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px;">
+                            <thead>
+                                <tr style="background: #f8fafc; color: #64748b; font-size: 13px; text-transform: uppercase;">
+                                    <th style="padding: 15px; border-radius: 8px 0 0 8px;">Mã Đơn</th>
+                                    <th style="padding: 15px;">Ngày Đặt</th>
+                                    <th style="padding: 15px;">Tổng Tiền</th>
+                                    <th style="padding: 15px;">Trạng Thái</th>
+                                    <th style="padding: 15px; text-align: center; border-radius: 0 8px 8px 0;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="o : ${listOrder}" style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 18px 15px; color: #1e293b;"><strong th:text="${'#' + o.order_id}">#1</strong></td>
+                                    <td style="padding: 18px 15px; color: #64748b; font-size: 14px;" th:text="${o.order_date}">Ngày đặt</td>
+                                    <td style="padding: 18px 15px; color: #d63384; font-weight: bold; font-size: 15px;" th:text="${#numbers.formatDecimal(o.total_price != null ? o.total_price : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</td>
+                                    <td style="padding: 18px 15px;">
+                                        <span th:if="${o.status == 'Pending'}" class="status-badge st-pending">Chờ Duyệt</span>
+                                        <span th:if="${o.status == 'Processing'}" class="status-badge st-processing">Đang Giao</span>
+                                        <span th:if="${o.status == 'Completed'}" class="status-badge st-completed">Hoàn Thành</span>
+                                        <span th:if="${o.status == 'Cancelled'}" class="status-badge st-cancelled">Đã Hủy</span>
+                                    </td>
+                                    <td style="padding: 18px 15px; text-align: center;">
+                                        <a th:href="@{/OrderDetail(orderId=${o.order_id})}" style="background:#0284c7; color:white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block; transition: 0.2s;"><i class="fas fa-eye"></i> Xem đơn</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:unless="${listOrder != null && !listOrder.isEmpty()}" style="text-align: center; padding: 60px 0; color: #94a3b8;">
+                        <i class="fas fa-box-open" style="font-size: 50px; margin-bottom: 15px; color: #cbd5e1; display: block;"></i>
+                        <p style="font-size: 15px;">Bạn chưa có đơn đặt hoa nào.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <div th:replace="~{view/footer :: body}"></div> 
+</body>
+</html>

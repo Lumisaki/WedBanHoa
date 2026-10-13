@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tiệm Ba Hoa - Đặt Hoa Online Giao Nhanh</title>
+        <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body>
+
+        <div th:replace="~{view/header :: body}"></div>
+
+        <section class="slider-wrapper">
+            <div class="slider-track" id="mySliderTrack">
+                <div class="slide-item"><img th:src="@{/images/anhmiule.png}" alt="Slide 1"></div>
+                <div class="slide-item"><img th:src="@{/images/logo1.png}" alt="Slide 2"></div>
+                <div class="slide-item"><img th:src="@{/images/logo2.png}" alt="Slide 3"></div>
+                <div class="slide-item"><img th:src="@{/images/logo3.png}" alt="Slide 4"></div>
+            </div>
+
+            <button class="slider-btn btn-prev" onclick="goPrev()"><i class="fas fa-chevron-left"></i></button>
+            <button class="slider-btn btn-next" onclick="goNext()"><i class="fas fa-chevron-right"></i></button>
+
+            <div class="slider-dots">
+                <span class="s-dot active" onclick="goSlide(0)"></span>
+                <span class="s-dot" onclick="goSlide(1)"></span>
+                <span class="s-dot" onclick="goSlide(2)"></span>
+                <span class="s-dot" onclick="goSlide(3)"></span>
+            </div>
+        </section>
+
+        <section class="trust-badges">
+            <div class="badge-item">
+                <i class="fas fa-shipping-fast"></i>
+                <h4>Giao Nhanh 60 Phút</h4>
+                <p>Nội thành TP.HCM & Hà Nội</p>
+            </div>
+            <div class="badge-item">
+                <i class="fas fa-camera"></i>
+                <h4>Chụp Hình Trước</h4>
+                <p>Gửi ảnh thực tế trước khi giao</p>
+            </div>
+            <div class="badge-item">
+                <i class="fas fa-envelope-open-text"></i>
+                <h4>Tặng Kèm Thiệp</h4>
+                <p>Miễn phí thiệp, banner cao cấp</p>
+            </div>
+            <div class="badge-item">
+                <i class="fas fa-hand-holding-heart"></i>
+                <h4>Cam Kết Hài Lòng</h4>
+                <p>Hoàn tiền 100% nếu không ưng ý</p>
+            </div>
+        </section>
+
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 15px;">
+            <div id="discount-section" class="discount-section" th:if="${dataProducts != null && !dataProducts.isEmpty()}">
+                <div class="section-title-wrapper">
+                    <h2 class="section-title" style="color: #ff4757;"><i class="fas fa-fire"></i> SẢN PHẨM NỔI BẬT</h2>
+                </div>
+
+                <div class="product-grid">
+                    <div th:each="o : ${dataProducts}" class="product-item">
+                        <div class="badge-discount" th:if="${o.discount != null && o.discount > 0}" th:text="${'GIẢM ' + o.discount + '%'}">GIẢM 10%</div>
+                        <div class="img-box">
+                            <a th:href="@{/ProductDetail(pid=${o.id})}">
+                                <img th:src="@{'/images/' + ${o.pimage}}" th:alt="${o.pname}" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=300'"> 
+                            </a>
+                        </div>
+                        <div class="product-details">
+                            <h4 th:title="${o.pname}">
+                                <a th:href="@{/ProductDetail(pid=${o.id})}" style="text-decoration: none; color: inherit;" th:text="${o.pname}">Tên sản phẩm</a>
+                            </h4>
+                            <div class="price-section">
+                                <span class="price-discount" th:text="${#numbers.formatDecimal(o.finalPrice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                                <span class="price-original" th:if="${o.discount != null && o.discount > 0}" th:text="${#numbers.formatDecimal(o.pprice, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+                                <th:block th:if="${o.pstock != null && o.pstock > 0}">
+                                    <form th:action="@{/AddToCart}" method="post" style="margin: 0;">
+                                        <input type="hidden" name="pid" th:value="${o.id}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn-buy" style="margin-top: 0; width: 100%; border: none; cursor: pointer;">
+                                            <i class="fas fa-shopping-cart"></i> THÊM VÀO GIỎ
+                                        </button>
+                                    </form>
+                                    <a th:href="@{/AddToCart(pid=${o.id},action='buynow')}" class="btn-buynow" style="text-align: center;">
+                                        <i class="fas fa-bolt"></i> MUA NGAY
+                                    </a>
+                                </th:block>
+                                <th:block th:unless="${o.pstock != null && o.pstock > 0}">
+                                    <button class="btn-buy" style="margin-top: 0; background: #cbd5e1; cursor: not-allowed; border: none; color: white;" disabled>
+                                        <i class="fas fa-box-open"></i> HẾT HÀNG
+                                    </button>
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            window.onload = function () {
+                var successMsg = /*[[${session.successMsg}]]*/ null;
+                if (successMsg) {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'bottom-start',
+                        showConfirmButton: false,
+                        timer: 5000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: successMsg
+                    });
+                }
+            };
+            /*]]>*/
+        </script>
+
+        <script>
+            let currentIdx = 0;
+            const track = document.getElementById('mySliderTrack');
+            const slides = track ? track.children : [];
+            const dots = document.querySelectorAll('.s-dot');
+            let timer = null;
+
+            function updateSlider() {
+                if (!track) return;
+                track.style.transform = `translateX(-${currentIdx * 100}%)`;
+                dots.forEach((d, i) => d.classList.toggle('active', i === currentIdx));
+            }
+
+            function goNext() {
+                currentIdx = (currentIdx + 1) % slides.length;
+                updateSlider();
+                resetTimer();
+            }
+
+            function goPrev() {
+                currentIdx = (currentIdx - 1 + slides.length) % slides.length;
+                updateSlider();
+                resetTimer();
+            }
+
+            function goSlide(i) {
+                currentIdx = i;
+                updateSlider();
+                resetTimer();
+            }
+
+            function resetTimer() {
+                clearInterval(timer);
+                timer = setInterval(goNext, 4000);
+            }
+
+            if (slides.length > 0) {
+                timer = setInterval(goNext, 4000);
+            }
+        </script>
+
+        <div th:replace="~{view/footer :: body}"></div>
+    </body>
+</html>

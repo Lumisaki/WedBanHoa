@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hồ Sơ Khách Hàng | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <h2>TIỆM BA HOA</h2>
+            <p>MANAGEMENT</p>
+        </div>
+        <ul class="nav-menu">
+            <li><a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a></li>
+            <li><a th:href="@{/ManagerProduct}"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a></li>
+            <li id="menu-main" class="active"><a href="#" onclick="switchTab('main')"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
+            <li><a th:href="@{/ManageOrder}"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a></li>
+            <li id="menu-chat"><a href="#" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Hộp thư hỗ trợ <span id="admin-chat-badge">Mới</span></a></li>
+        </ul>
+        <div class="nav-bottom">
+            <ul class="nav-menu" style="padding: 0;">
+                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
+                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1>Chi Tiết Khách Hàng</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div id="content-main">
+                <a th:href="@{/ManagerCustomer}" class="btn-back" style="margin-bottom: 25px;"><i class="fas fa-arrow-left"></i> Trở Về Danh Sách</a>
+
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h2><i class="fas fa-address-card"></i> Hồ sơ cá nhân: #<span th:text="${customer != null ? customer.userId : ''}"></span></h2>
+                    </div>
+
+                    <div class="tabs">
+                        <a th:href="@{/CustomerDetail(id=${customer != null ? customer.userId : ''}, tab='info')}" th:classappend="${activeTab == 'info' || activeTab == null ? 'active' : ''}" class="tab">Thông tin cá nhân</a>
+                        <a th:href="@{/CustomerDetail(id=${customer != null ? customer.userId : ''}, tab='history')}" th:classappend="${activeTab == 'history' ? 'active' : ''}" class="tab">Lịch sử mua & Đánh giá</a>
+                    </div>
+
+                    <th:block th:if="${activeTab == 'info' || activeTab == null}">
+                        <div class="info-row"><span>Họ và tên:</span> <strong th:text="${customer.fullname}"></strong></div>
+                        <div class="info-row"><span>Email đăng nhập:</span> <strong th:text="${customer.email}"></strong></div>
+                        <div class="info-row"><span>Số điện thoại:</span> <strong th:text="${customer.phone != null ? customer.phone : 'Chưa cập nhật'}"></strong></div>
+                        <div class="info-row"><span>Địa chỉ thường trú:</span> <strong th:text="${customer.address != null ? customer.address : 'Chưa cập nhật'}"></strong></div>
+
+                        <div class="info-row">
+                            <span>Câu hỏi bảo mật:</span> 
+                            <strong style="color: #0284c7;" th:text="${customer.securityQuestion}"></strong>
+                        </div>
+                        <div class="info-row no-border">
+                            <span>Câu trả lời bảo mật:</span> 
+                            <div style="display: flex; align-items: center; gap: 10px; justify-content: flex-end;">
+                                <input type="password" id="sec-answer" th:value="${customer.securityAnswer}" readonly 
+                                       style="border: none; background: transparent; font-weight: bold; color: #d63384; outline: none; font-size: 15px; font-family: inherit; text-align: right; width: 100%;">
+                                <i class="fas fa-eye-slash" id="toggle-eye" style="cursor: pointer; color: #64748b; font-size: 16px;" onclick="toggleAnswer()" title="Hiện/Ẩn câu trả lời"></i>
+                            </div>
+                        </div>
+                    </th:block>
+
+                    <th:block th:if="${activeTab == 'history'}">
+                        <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;"><i class="fas fa-shopping-bag" style="color: #d63384;"></i> Lịch sử đặt hàng</h3>
+                        <p th:if="${orders == null || orders.empty}" style="color: #64748b; font-style: italic;">Khách hàng chưa có đơn đặt hoa nào.</p>
+                        <table th:if="${orders != null && !orders.empty}" style="margin-top: 15px; width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="background:#f8fafc; color:#64748b; text-transform: uppercase; font-size: 12px;">
+                                    <th style="padding:15px;">Mã Đơn</th>
+                                    <th style="padding:15px;">Ngày Đặt</th>
+                                    <th style="padding:15px;">Tổng Tiền</th>
+                                    <th style="padding:15px;">Trạng Thái</th>
+                                    <th style="padding:15px; text-align: center;">Chi Tiết</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <th:block th:each="o : ${orders}">
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding:15px; color:#1e293b;"><strong>#<span th:text="${o.order_id}"></span></strong></td>
+                                        <td style="padding:15px; color:#64748b; font-size: 13px;" th:text="${o.order_date}"></td>
+                                        <td style="padding:15px; color: #d63384; font-weight: bold;" th:text="${#numbers.formatDecimal(o.total_price != null ? o.total_price : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></td>
+                                        <td style="padding:15px;">
+                                            <span th:if="${o.status == 'Pending'}" class="status-badge st-pending">Chờ Duyệt</span>
+                                            <span th:if="${o.status == 'Processing'}" class="status-badge st-processing">Đang Cắm/Giao</span>
+                                            <span th:if="${o.status == 'Completed'}" class="status-badge st-completed">Hoàn Thành</span>
+                                            <span th:if="${o.status == 'Cancelled'}" class="status-badge st-cancelled">Đã Hủy</span>
+                                        </td>
+                                        <td style="padding:15px; text-align: center;"><a th:href="@{/AdminOrderDetail(orderId=${o.order_id})}" class="btn-view" style="background:#4f46e5; color:white; padding: 6px 12px; border-radius: 6px; text-decoration: none;">Xem đơn</a></td>
+                                    </tr>
+                                </th:block>
+                            </tbody>
+                        </table>
+
+                        <h3 style="margin-top: 40px; color: #1e293b; font-size: 16px;"><i class="fas fa-star" style="color: #f59e0b;"></i> Lịch sử đánh giá sản phẩm</h3>
+                        <p th:if="${reviews == null || reviews.empty}" style="color: #64748b; font-style: italic;">Khách hàng chưa có đánh giá nào.</p>
+                        <table th:if="${reviews != null && !reviews.empty}" style="margin-top: 15px; width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="background:#f8fafc; color:#64748b; font-size: 12px; text-transform: uppercase;">
+                                    <th style="padding: 15px;">Sản phẩm</th>
+                                    <th style="padding: 15px;">Đánh giá sao</th>
+                                    <th style="padding: 15px;">Bình luận</th>
+                                    <th style="padding: 15px;">Thời gian</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <th:block th:each="r : ${reviews}">
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 15px;"><strong th:text="${r.product_name}"></strong></td>
+                                        <td style="padding: 15px;" class="text-warning">
+                                            <th:block th:if="${r.rating != null && r.rating > 0}" th:each="star : ${#numbers.sequence(1, r.rating)}">
+                                                <i class="fas fa-star"></i>
+                                            </th:block>
+                                        </td>
+                                        <td style="padding: 15px; color: #4a5568; font-style: italic;">"<span th:text="${r.comment}"></span>"</td>
+                                        <td style="padding: 15px; font-size: 13px; color: #94a3b8;" th:text="${r.review_date}"></td>
+                                    </tr>
+                                </th:block>
+                            </tbody>
+                        </table>
+                    </th:block>
+                </div>
+            </div>
+
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAnswer() {
+            const input = document.getElementById('sec-answer');
+            const icon = document.getElementById('toggle-eye');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+                icon.style.color = '#0284c7';
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+                icon.style.color = '#64748b';
+            }
+        }
+    </script>
+</body>
+</html>

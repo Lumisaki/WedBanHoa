@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="body">
+<link rel="stylesheet" th:href="@{/css/footer.css}" href="/css/footer.css">
+
+<footer class="site-footer">
+    <div class="footer-inner">
+
+        <!-- CỘT 1: LOGO + GIỚI THIỆU -->
+        <div class="footer-col footer-brand">
+            <div class="footer-logo-wrap">
+                <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="Tiệm Ba Hoa" class="footer-logo-img">
+                <div class="footer-brand-text">
+                    <span class="footer-brand-name">TIỆM BA HOA</span>
+                    <span class="footer-brand-slogan">Trao Hoa – Gửi Yêu Thương 🌸</span>
+                </div>
+            </div>
+            <p class="footer-desc">
+                Chuyên cung cấp hoa tươi cao cấp – giao hàng hỏa tốc 60 phút tận nơi.<br>
+                Đội ngũ tư vấn hỗ trợ 24/7, cam kết hài lòng 100%.
+            </p>
+            <div class="footer-contact-list">
+                <span><i class="fas fa-phone-alt"></i> Hotline: <strong>0789 273 903</strong></span>
+                <span><i class="fas fa-envelope"></i> Email: <strong>tiembahoa@gmail.com</strong></span>
+            </div>
+        </div>
+
+        <!-- CỘT 2: CHĂM SÓC KHÁCH HÀNG -->
+        <div class="footer-col">
+            <h4 class="footer-col-title">Chăm Sóc Khách Hàng</h4>
+            <ul class="footer-links">
+                <li><a href="info?page=about"><i class="fas fa-angle-right"></i> Giới Thiệu</a></li>
+                <li><a href="info?page=contact"><i class="fas fa-angle-right"></i> Liên Hệ</a></li>
+                <li><a href="info?page=shipping"><i class="fas fa-angle-right"></i> Chính Sách Vận Chuyển</a></li>
+                <li><a href="info?page=faq"><i class="fas fa-angle-right"></i> Câu Hỏi Thường Gặp</a></li>
+                <li><a href="info?page=payment-info"><i class="fas fa-angle-right"></i> Hình Thức Thanh Toán</a></li>
+                <li><a href="info?page=privacy"><i class="fas fa-angle-right"></i> Bảo Mật Thông Tin</a></li>
+                <li><a href="info?page=refund"><i class="fas fa-angle-right"></i> Chính Sách Hoàn Tiền</a></li>
+            </ul>
+        </div>
+
+        <!-- CỘT 3: THEO DÕI -->
+        <div class="footer-col">
+            <h4 class="footer-col-title">Theo Dõi</h4>
+            <ul class="footer-links footer-social-links">
+                <li><a href="https://facebook.com/tiembahoa" target="_blank"><i class="fab fa-facebook-square" style="color:#1877f2;"></i> Facebook</a></li>
+                <li><a href="https://x.com/tiembahoa" target="_blank"><i class="fab fa-twitter-square" style="color:#1da1f2;"></i> Twitter</a></li>
+                <li><a href="https://instagram.com/tiembahoa" target="_blank"><i class="fab fa-instagram-square" style="color:#e1306c;"></i> Instagram</a></li>
+                <li><a href="https://youtube.com/@tiembahoa" target="_blank"><i class="fab fa-youtube-square" style="color:#ff0000;"></i> Youtube</a></li>
+                <li><a href="https://zalo.me/0789273903" target="_blank"><i class="fas fa-comment-dots" style="color:#0068ff;"></i> Zalo</a></li>
+            </ul>
+        </div>
+
+        <!-- CỘT 4: ĐỊA CHỈ -->
+        <div class="footer-col">
+            <h4 class="footer-col-title">Tiệm Ba Hoa</h4>
+            <div class="footer-address-block">
+                <p><i class="fas fa-map-marker-alt"></i> <strong>Cửa hàng chính:</strong><br>
+                    Hà Nội, Việt Nam</p>
+                <p><i class="fas fa-clock"></i> <strong>Giờ mở cửa:</strong><br>
+                    7:00 – 22:00 tất cả các ngày</p>
+                <p><i class="fas fa-truck"></i> <strong>Giao hàng:</strong><br>
+                    Hỏa tốc 60 phút nội thành</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="footer-bottom">
+        <p>© 2025 <strong>Tiệm Ba Hoa</strong> – Bản quyền thuộc về nhóm phát triển. All rights reserved.</p>
+        <p class="footer-bottom-note">Được làm bằng <i class="fas fa-heart" style="color:#e74c3c;"></i> bởi Nhóm 5</p>
+    </div>
+</footer>
+
+<!-- Tích hợp Chat Box dùng chung -->
+<div th:replace="~{view/chat :: body}"></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Chi Tiết Đơn Hàng #' + ${order != null ? order.order_id : ''} + ' | Tiệm Ba Hoa'">Chi Tiết Đơn Hàng | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" th:href="@{/css/index.css?v=5.0}" href="/css/index.css?v=5.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div th:replace="~{view/header :: body}"></div>
+
+    <div class="detail-wrapper">
+        
+        <a th:href="@{/profilm}" class="btn-nav-top-right"><i class="fas fa-arrow-left"></i> Trở lại trang hồ sơ</a>
+
+        <div class="detail-grid">
+            <div>
+                <div class="detail-card">
+                    <h3 class="main-title"><i class="fas fa-box-open"></i> Danh sách hoa trong đơn</h3>
+                    
+                    <th:block th:each="item : ${items}">
+                        <div style="border-bottom: 1px solid #edf2f7; padding-bottom: 15px; margin-bottom: 15px;">
+                            <div class="prod-item-row" style="border-bottom: none; padding-bottom: 0;">
+                                <img th:src="@{'/images/' + ${item.image}}" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'">
+                                <div class="prod-meta">
+                                    <h4 class="prod-title" th:text="${item.product_name}"></h4>
+                                    <span style="color:#64748b; font-size: 13px;">Số lượng đặt: <span th:text="${item.quantity}"></span> x <span th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span></span>
+                                </div>
+                                <span style="font-weight: 700; color: #d63384;" th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span>
+                            </div>
+                            
+                            <form th:action="@{/SubmitReview}" method="post" class="review-box" style="display: flex; align-items: center; gap: 10px;">
+                                <input type="hidden" name="orderId" th:value="${order.order_id}">
+                                <input type="hidden" name="productId" th:value="${item.product_id}">
+                                <span style="font-size: 12px; font-weight: 700; color:#c8237e; white-space:nowrap;"><i class="fas fa-comment-dots"></i> Đánh giá:</span>
+                                <select name="rating" required>
+                                    <option value="5">⭐⭐⭐⭐⭐ 5 Sao</option>
+                                    <option value="4">⭐⭐⭐⭐ 4 Sao</option>
+                                    <option value="3">⭐⭐⭐ 3 Sao</option>
+                                    <option value="2">⭐⭐ 2 Sao</option>
+                                    <option value="1">⭐ 1 Sao</option>
+                                </select>
+                                <input type="text" name="comment" required placeholder="Nhập cảm nhận về hoa...">
+                                <button type="submit" class="btn-review-submit">Gửi</button>
+                            </form>
+                        </div>
+                    </th:block>
+                </div>
+                
+                <form th:action="@{/UpdateOrderDetails}" method="post" id="orderUpdateForm">
+                    <input type="hidden" name="orderId" th:value="${order.order_id}">
+                    
+                    <div class="detail-card">
+                        <h3 class="main-title"><i class="fas fa-shipping-fast"></i> Thông tin giao nhận (Chỉ sửa khi Chờ Duyệt)</h3>
+                        
+                        <th:block th:if="${isEditable}">
+                            <div class="edit-form-grid">
+                                <div class="form-group-edit">
+                                    <label>Người nhận hoa</label>
+                                    <input type="text" name="receiver_name" th:value="${order.receiver_name}" class="editable-field" readonly required>
+                                </div>
+                                <div class="form-group-edit">
+                                    <label>Số điện thoại</label>
+                                    <input type="text" name="receiver_phone" th:value="${order.receiver_phone}" class="editable-field" readonly required>
+                                </div>
+                                <div class="form-group-edit full-width">
+                                    <label>Địa chỉ (Số nhà, Tên đường)</label>
+                                    <input type="text" name="receiver_address" th:value="${order.receiver_address}" class="editable-field" readonly required>
+                                </div>
+                                <div class="form-group-edit">
+                                    <label>Quận / Huyện</label>
+                                    <input type="text" name="receiver_district" th:value="${order.receiver_district}" class="editable-field" readonly required>
+                                </div>
+                                <div class="form-group-edit">
+                                    <label>Tỉnh / Thành phố</label>
+                                    <input type="text" name="receiver_city" th:value="${order.receiver_city}" class="editable-field" readonly required>
+                                </div>
+                                <div class="form-group-edit">
+                                    <label>Ngày hẹn giao</label>
+                                    <input type="date" name="delivery_date" th:value="${order.delivery_date}" class="editable-field" readonly required>
+                                </div>
+                                <div class="form-group-edit">
+                                    <label>Khung giờ hẹn</label>
+                                    <select name="delivery_time" class="editable-field select-readonly" required>
+                                        <option value="Từ 07:00 - 09:00" th:selected="${order.delivery_time == 'Từ 07:00 - 09:00'}">Từ 07:00 - 09:00 AM</option>
+                                        <option value="Từ 09:00 - 12:00" th:selected="${order.delivery_time == 'Từ 09:00 - 12:00'}">Từ 09:00 - 12:00 AM</option>
+                                        <option value="Từ 13:00 - 16:00" th:selected="${order.delivery_time == 'Từ 13:00 - 16:00'}">Từ 13:00 - 16:00 PM</option>
+                                        <option value="Từ 16:00 - 20:00" th:selected="${order.delivery_time == 'Từ 16:00 - 20:00'}">Từ 16:00 - 20:00 PM</option>
+                                    </select>
+                                </div>
+                                <div class="form-group-edit full-width">
+                                    <label>Lời nhắn ghi trên thiệp</label>
+                                    <textarea name="card_message" class="editable-field" rows="2" readonly placeholder="Lời chúc gửi kèm..." th:text="${order.card_message}"></textarea>
+                                </div>
+                                <div class="form-group-edit full-width">
+                                    <label>Ghi chú cho Shop</label>
+                                    <textarea name="special_requests" class="editable-field" rows="2" readonly placeholder="Yêu cầu đặc biệt..." th:text="${order.special_requests}"></textarea>
+                                </div>
+                            </div>
+                        </th:block>
+                        
+                        <th:block th:unless="${isEditable}">
+                            <div class="info-row"><span>Người nhận:</span> <strong><span th:text="${order.receiver_name}"></span> - <span th:text="${order.receiver_phone}"></span></strong></div>
+                            <div class="info-row" style="flex-direction: column; align-items: flex-start;">
+                                <span>Địa chỉ giao hoa chi tiết:</span>
+                                <strong style="margin-top: 5px; display: block; color: #1e293b;"><span th:text="${order.receiver_address}"></span>, <span th:text="${order.receiver_district}"></span>, <span th:text="${order.receiver_city}"></span></strong>
+                            </div>
+                            <div class="info-row"><span>Thời gian:</span> <strong><span th:text="${order.delivery_time}"></span> | <span th:text="${order.delivery_date}"></span></strong></div>
+                            <div class="info-row"><span>Lời nhắn thiệp:</span> <strong><span th:text="${order.card_message != null && !order.card_message.empty ? order.card_message : 'Không có'}"></span></strong></div>
+                            <div class="info-row"><span>Lưu ý cho shop:</span> <strong><span th:text="${order.special_requests != null && !order.special_requests.empty ? order.special_requests : 'Không có'}"></span></strong></div>
+                        </th:block>
+                        
+                    </div>
+
+                    <div class="action-button-container">
+                        <th:block th:if="${isEditable}">
+                            <button type="button" id="btn-trigger-edit" class="btn-trigger-edit-left" onclick="unlockEditMode()">
+                                <i class="fas fa-edit"></i> SỬA THÔNG TIN ĐƠN
+                            </button>
+                            <button type="submit" id="btn-save-changes" class="btn-save-changes-left" style="display: none;">
+                                <i class="fas fa-save"></i> LƯU THAY ĐỔI
+                            </button>
+                        </th:block>
+                    </div>
+                </form>
+
+                <th:block th:if="${isEditable}">
+                    <form th:action="@{/CancelOrder}" method="post" style="margin-bottom: 25px;">
+                        <input type="hidden" name="orderId" th:value="${order.order_id}">
+                        <button type="submit" class="btn-cancel-order-left" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn đặt hoa này không?')">
+                            <i class="fas fa-times-circle"></i> HỦY ĐƠN HÀNG
+                        </button>
+                    </form>
+                </th:block>
+                
+                <th:block th:if="${order.status == 'Completed' || order.status == 'Cancelled'}">
+                    <form th:action="@{/ReOrder}" method="post" style="margin-bottom: 25px;">
+                        <input type="hidden" name="orderId" th:value="${order.order_id}">
+                        <button type="submit" class="btn-trigger-edit-left" style="background:#0284c7;" onclick="return confirm('Hệ thống sẽ tái tạo lại đơn hàng này. Đồng ý chứ?')">
+                            <i class="fas fa-sync-alt"></i> MUA LẠI ĐƠN NÀY
+                        </button>
+                    </form>
+                </th:block>
+            </div>
+
+            <div>
+                <div class="detail-card">
+                    <h3 class="main-title"><i class="fas fa-receipt"></i> Trạng thái đơn hàng</h3>
+                    <div class="info-row"><span>Mã đơn đặt:</span> <strong>#<span th:text="${order.order_id}"></span></strong></div>
+                    <div class="info-row">
+                        <span>Trạng thái:</span> 
+                        <span th:if="${order.status == 'Pending'}" class="status-badge st-pending">Chờ Duyệt</span>
+                        <span th:if="${order.status == 'Processing'}" class="status-badge st-processing">Đang Cắm/Giao</span>
+                        <span th:if="${order.status == 'Completed'}" class="status-badge st-completed">Đã Hoàn Thành</span>
+                        <span th:if="${order.status == 'Cancelled'}" class="status-badge st-cancelled">Đã Hủy</span>
+                    </div>
+                    <div class="info-row"><span>Hình thức trả:</span> <strong style="color: #0284c7;" th:text="${order.payment_method}"></strong></div>
+                </div>
+
+                <div class="detail-card">
+                    <h3 class="main-title"><i class="fas fa-calculator"></i> Tóm tắt thanh toán</h3>
+                    
+                    <div class="info-row"><span>Giá gốc tiền hoa:</span> <strong th:text="${#numbers.formatDecimal(originalSubTotal != null ? originalSubTotal : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></strong></div>
+
+                    <th:block th:if="${order.coupon_code != null}">
+                        <div class="info-row"><span>Mã giảm giá:</span> <strong style="color: #16a34a;" th:text="${order.coupon_code}"></strong></div>
+                        <div class="info-row"><span>Khấu trừ giảm:</span> <strong style="color: #ff4757;">-<span th:text="${#numbers.formatDecimal(order.discount_amount != null ? order.discount_amount : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span></strong></div>
+                    </th:block>
+
+                    <div class="info-row"><span>Thuế VAT (8%):</span> <strong th:text="${#numbers.formatDecimal(order.vat_amount != null ? order.vat_amount : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></strong></div>
+                    
+                    <div class="info-row" style="border-top: 2px dashed #e2e8f0; margin-top: 10px; padding-top: 10px;">
+                        <span style="font-weight: 700; color:#1e293b;">TỔNG TIỀN PHẢI TRẢ:</span>
+                        <strong style="color: #d63384; font-size: 20px;" th:text="${#numbers.formatDecimal(order.total_price != null ? order.total_price : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:inline="javascript">
+        function unlockEditMode() {
+            var fields = document.querySelectorAll('.editable-field');
+            fields.forEach(function(field) {
+                field.removeAttribute('readonly');
+                field.classList.add('active-mode');
+            });
+            document.getElementById('btn-trigger-edit').style.display = 'none';
+            document.getElementById('btn-save-changes').style.display = 'block';
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            /*[# th:if="${session.sweetSuccess != null}"]*/
+            Swal.fire({ icon: 'success', title: 'Hoàn tất', text: /*[[${session.sweetSuccess}]]*/ '', confirmButtonColor: '#d63384' });
+            /*[/]*/
+            
+            /*[# th:if="${session.sweetError != null}"]*/
+            Swal.fire({ icon: 'error', title: 'Không thành công', text: /*[[${session.sweetError}]]*/ '', confirmButtonColor: '#d63384' });
+            /*[/]*/
+            
+            /*[# th:if="${session.reviewMsg != null}"]*/
+            Swal.fire({ icon: 'success', title: 'Đã cập nhật', text: /*[[${session.reviewMsg}]]*/ '', confirmButtonColor: '#d63384' });
+            /*[/]*/
+        });
+    </script>
+    <div th:replace="~{view/footer :: body}"></div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng Nhập | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" th:href="@{/css/loginregister.css}" href="/css/loginregister.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="brand-logo">Tiệm Ba Hoa</div>
+        <p style="text-align: center; color: #64748b; margin-top: 0; margin-bottom: 35px; font-weight: 500; font-size: 14px;">Cung cấp thông tin đăng nhập hợp lệ của bạn</p> 
+        <form th:action="@{/Login}" method="post">
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Địa chỉ Email</label>
+                <input type="text" name="email" placeholder="Nhập email của bạn..." required>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Mật khẩu</label>
+                <input type="password" name="password" placeholder="Nhập mật khẩu..." required>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> ĐĂNG NHẬP
+            </button>
+        </form>
+        <div class="extra-links">
+            <a th:href="@{/Register}" class="register-now"><i class="fas fa-user-plus"></i> Chưa có tài khoản?</a>
+            <a th:href="@{/forgot}"><i class="fas fa-question-circle"></i> Quên mật khẩu?</a>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        window.onload = function() {
+            /*[# th:if="${error != null}"]*/
+            Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: /*[[${error}]]*/ 'Sai email hoặc mật khẩu', confirmButtonColor: '#d63384' });
+            /*[/]*/
+
+            /*[# th:if="${session.errorMsg != null}"]*/
+            Swal.fire({ icon: 'warning', title: 'Yêu cầu đăng nhập', text: /*[[${session.errorMsg}]]*/ '', confirmButtonColor: '#d63384' });
+            /*[/]*/
+
+            /*[# th:if="${session.successMsg != null}"]*/
+            Swal.fire({ icon: 'success', title: 'Thành công', text: /*[[${session.successMsg}]]*/ '', confirmButtonColor: '#d63384' });
+            /*[/]*/
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Chi Tiết Đơn Hàng #' + ${order != null ? order.order_id : ''} + ' | Admin Dashboard'">Chi Tiết Đơn Hàng | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <h2>TIỆM BA HOA</h2>
+            <p>MANAGEMENT</p>
+        </div>
+        <ul class="nav-menu">
+            <li><a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a></li>
+            <li><a th:href="@{/ManagerProduct}"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a></li>
+            <li><a th:href="@{/ManagerCustomer}"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
+            <li id="menu-main" class="active"><a href="#" onclick="switchTab('main')"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a></li>
+            <li id="menu-chat"><a href="#" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Hộp thư hỗ trợ <span id="admin-chat-badge">Mới</span></a></li>
+        </ul>
+        <div class="nav-bottom">
+            <ul class="nav-menu" style="padding: 0;">
+                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
+                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1>Chi Tiết Giao Dịch #<span th:text="${order != null ? order.order_id : ''}"></span></h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            
+            <div id="content-main">
+                <a th:href="@{/ManageOrder}" class="btn-back" style="margin-bottom: 25px;"><i class="fas fa-arrow-left"></i> Trở Về Danh Sách</a>
+
+                <div class="card-grid" style="grid-template-columns: 2fr 1fr;">
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="detail-card">
+                            <h3 class="section-title" style="margin-top: 0; font-size: 16px;"><i class="fas fa-map-marked-alt"></i> Thông Tin Vận Chuyển</h3>
+                            <div class="info-row"><span>Người Đặt (Sender):</span> <strong><span th:text="${order.sender_name}"></span> - <span th:text="${order.sender_phone}"></span></strong></div>
+                            <div class="info-row"><span>Người Nhận (Receiver):</span> <strong style="color: #d63384;"><span th:text="${order.receiver_name}"></span> - <span th:text="${order.receiver_phone}"></span></strong></div>
+                            <div class="info-row" style="flex-direction: column; align-items: flex-start;">
+                                <span>Địa chỉ Giao Hoa:</span>
+                                <strong style="margin-top: 6px; display: block; color: #1e293b;"><span th:text="${order.receiver_address}"></span>, <span th:text="${order.receiver_district}"></span>, <span th:text="${order.receiver_city}"></span></strong>
+                            </div>
+                            <div class="info-row no-border"><span>Thời gian giao hàng hẹn:</span> <strong><i class="far fa-clock"></i> <span th:text="${order.delivery_time}"></span> | <span th:text="${order.delivery_date}"></span></strong></div>
+                        </div>
+
+                        <div class="detail-card">
+                            <h3 class="section-title" style="margin-top: 0; font-size: 16px;"><i class="fas fa-list"></i> Các Mặt Hàng Khách Đặt</h3>
+                            <table style="margin-top: 15px; width: 100%; text-align: left; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f8fafc; color: #64748b; font-size: 13px; text-transform: uppercase;">
+                                        <th style="padding: 12px; border-bottom: 2px solid #e2e8f0;">Sản Phẩm Hoa</th>
+                                        <th style="padding: 12px; border-bottom: 2px solid #e2e8f0; text-align: center;">Đơn Giá</th>
+                                        <th style="padding: 12px; border-bottom: 2px solid #e2e8f0; text-align: center;">SL</th>
+                                        <th style="padding: 12px; border-bottom: 2px solid #e2e8f0; text-align: right;">Thành Tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <th:block th:each="item : ${items}">
+                                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                                            <td style="padding: 12px; display: flex; align-items: center; gap: 12px;">
+                                                <img th:src="@{'/images/' + ${item.image}}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'">
+                                                <strong style="color: #1e293b; font-size: 14px;" th:text="${item.product_name}"></strong>
+                                            </td>
+                                            <td style="padding: 12px; text-align: center;" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + 'đ'}"></td>
+                                            <td style="padding: 12px; text-align: center; font-weight: bold; color: #0284c7;" th:text="'x' + ${item.quantity}"></td>
+                                            <td style="padding: 12px; text-align: right; color: #d63384; font-weight: bold;" th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT') + 'đ'}"></td>
+                                        </tr>
+                                    </th:block>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="detail-card">
+                            <h3 class="section-title" style="margin-top: 0; font-size: 16px;"><i class="fas fa-envelope-open-text"></i> Ghi Chú & Lời Nhắn Thiệp</h3>
+                            <div style="background: #fffbef; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 6px; font-style: italic; color: #78350f; font-size: 14px; margin-bottom: 15px;">
+                                <strong>Thiệp:</strong> "<span th:text="${order.card_message != null && !order.card_message.empty ? order.card_message : 'Khách không ghi lời nhắn'}"></span>"
+                            </div>
+                            <div style="background: #f1f5f9; border-left: 4px solid #64748b; padding: 15px; border-radius: 6px; color: #334155; font-size: 14px;">
+                                <strong>Lưu ý cho Florist:</strong> <span th:text="${order.special_requests != null && !order.special_requests.empty ? order.special_requests : 'Không có yêu cầu đặc biệt'}"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="detail-card">
+                            <h3 class="section-title" style="margin-top: 0; font-size: 16px;"><i class="fas fa-calculator"></i> Tóm Tắt Tài Chính</h3>
+                            <th:block th:if="${order.coupon_code != null}">
+                                <div class="info-row"><span>Mã giảm giá dùng:</span> <strong style="color: #16a34a;" th:text="${order.coupon_code}"></strong></div>
+                                <div class="info-row"><span>Khấu trừ mã:</span> <strong style="color: #ff4757;">-<span th:text="${#numbers.formatDecimal(order.discount_amount != null ? order.discount_amount : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span></strong></div>
+                            </th:block>
+                            <div class="info-row"><span>Thuế VAT (8%):</span> <strong th:text="${#numbers.formatDecimal(order.vat_amount != null ? order.vat_amount : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></strong></div>
+                            <div class="info-row no-border" style="border-top: 2px solid #e2e8f0; margin-top: 10px; padding-top: 15px;">
+                                <span style="font-weight: 700; color:#1e293b;">TỔNG TIỀN CHỐT:</span>
+                                <strong style="color: #d63384; font-size: 22px;" th:text="${#numbers.formatDecimal(order.total_price != null ? order.total_price : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></strong>
+                            </div>
+                            <div class="info-row no-border"><span>Thanh toán:</span> <strong style="color: #0284c7; background: #e0f2fe; padding: 4px 8px; border-radius: 4px; font-size: 12px;" th:text="${order.payment_method}"></strong></div>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h3 class="section-title" style="margin-top: 0; font-size: 16px;"><i class="fas fa-sync-alt"></i> Cập Nhật Trạng Thái</h3>
+                            <form th:action="@{/UpdateOrderStatus}" method="post" style="display: flex; flex-direction: column; gap: 15px; margin: 0;">
+                                <input type="hidden" name="orderId" th:value="${order.order_id}">
+                                <select name="status" class="status-select" style="padding: 12px; border-radius: 8px; font-size: 14px; width: 100%;">
+                                    <option value="Pending" th:selected="${order.status == 'Pending'}">Chờ Duyệt</option>
+                                    <option value="Processing" th:selected="${order.status == 'Processing'}">Đang Cắm/Giao hoa</option>
+                                    <option value="Completed" th:selected="${order.status == 'Completed'}">Giao & Nhận Tiền</option>
+                                    <option value="Cancelled" th:selected="${order.status == 'Cancelled'}">Hủy đơn</option>
+                                </select>
+                                <button type="submit" class="btn-update" style="width: 100%; padding: 12px; font-size: 14px;"><i class="fas fa-save"></i> LƯU THAY ĐỔI</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+
+        </div>
+    </div>
+
+    <script th:src="@{/js/admin-search.js}"></script>
+</body>
+</html>

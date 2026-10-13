@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="body">
+<style>
+    .floating-chat-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #d63384;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 28px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        cursor: pointer;
+        z-index: 1000;
+        transition: transform 0.3s ease, background 0.3s;
+    }
+    .floating-chat-btn:hover {
+        transform: scale(1.1);
+        background: #c22071;
+    }
+    #chat-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: red;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .chat-window {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 350px;
+        max-height: 500px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        transition: opacity 0.3s ease;
+        animation: slideUp 0.3s ease-out;
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .chat-header {
+        background: #d63384;
+        color: white;
+        padding: 15px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 16px;
+    }
+    .chat-body {
+        height: 320px;
+        padding: 15px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        font-size: 14px;
+        scroll-behavior: smooth;
+    }
+    .chat-msg {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 18px;
+        word-wrap: break-word;
+        position: relative;
+        line-height: 1.4;
+    }
+    .chat-msg.right {
+        align-self: flex-end;
+        background: #d63384;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    .chat-msg.left {
+        align-self: flex-start;
+        background: #e9ecef;
+        color: #212529;
+        border-bottom-left-radius: 4px;
+    }
+    .chat-time {
+        font-size: 10px;
+        color: #adb5bd;
+        margin-top: 4px;
+        display: block;
+        text-align: right;
+    }
+    .chat-msg.right .chat-time {
+        color: #f8d7da;
+    }
+    .chat-footer {
+        padding: 12px;
+        border-top: 1px solid #edf2f7;
+        display: flex;
+        gap: 8px;
+        background: white;
+        align-items: center;
+    }
+    .chat-footer textarea {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        outline: none;
+        resize: none;
+        height: 40px;
+        overflow: hidden;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 20px;
+    }
+    .chat-footer button {
+        background: #d63384;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background 0.3s;
+    }
+    .chat-footer button:hover {
+        background: #c22071;
+    }
+    .chat-loading {
+        align-self: center;
+        color: #6c757d;
+        font-size: 12px;
+        display: none;
+    }
+    @media (max-width: 425px) {
+        .chat-window {
+            width: calc(100vw - 20px);
+            right: 10px;
+            bottom: 85px;
+            max-height: 60vh;
+        }
+        .floating-chat-btn {
+            right: 10px;
+            bottom: 10px;
+        }
+    }
+</style>
+
+<div class="floating-chat-btn" onclick="toggleChatWindow()">
+    <i class="fas fa-comment-dots"></i>
+    <span id="chat-badge" style="display: none;">0</span>
+</div>
+
+<div class="chat-window" id="client-chat-window">
+    <div class="chat-header">
+        <span><i class="fas fa-headset"></i> Tiệm Ba Hoa Hỗ Trợ</span>
+        <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChatWindow()"></i>
+    </div>
+    
+    <div id="client-chat-messages" class="chat-body">
+        <div style="text-align: center; color: #6c757d; font-size: 12px; margin-bottom: 10px;">
+            Hỗ trợ viên sẽ trả lời bạn trong chốc lát!
+        </div>
+    </div>
+    <div id="chat-loading" class="chat-loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>
+    
+    <div class="chat-footer">
+        <textarea id="client-msg-input" placeholder="Nhập tin nhắn... (Shift+Enter để xuống dòng)" rows="1"></textarea>
+        <button onclick="sendClientMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var currentUserId = /*[[${session.userSession != null ? session.userSession.userId : ''}]]*/ '';
+    var currentUserRole = /*[[${session.userSession != null ? session.userSession.roleId : ''}]]*/ '';
+    var socket = null;
+    var chatLoaded = false;
+
+    window.addEventListener("DOMContentLoaded", function() {
+        if(currentUserId && currentUserRole === 2) {
+            updateUnreadBadge();
+            setInterval(updateUnreadBadge, 30000); 
+        }
+    });
+
+    function updateUnreadBadge() {
+        fetch("ChatAPI?action=getUnreadCount")
+            .then(res => res.json())
+            .then(data => {
+                var badge = document.getElementById("chat-badge");
+                if(data.unread && data.unread > 0) {
+                    badge.innerText = data.unread > 99 ? '99+' : data.unread;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }).catch(e => console.log(e));
+    }
+
+    function toggleChatWindow() {
+        if(!currentUserId || currentUserRole == 1) {
+            window.location.href = "Login";
+            return;
+        }
+        var win = document.getElementById("client-chat-window");
+        if(win.style.display === "none" || win.style.display === "") {
+            win.style.display = "flex";
+            document.getElementById("chat-badge").style.display = "none";
+            connectClientWebSocket();
+            if(!chatLoaded) {
+                loadClientChatHistory();
+            } else {
+                scrollToBottom();
+            }
+        } else {
+            win.style.display = "none";
+        }
+    }
+
+    function connectClientWebSocket() {
+        if (socket !== null && socket.readyState === WebSocket.OPEN) return;
+        var wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        var wsUrl = wsProtocol + window.location.host + "/chat-endpoint?clientId=" + currentUserId + "&role=client";
+        socket = new WebSocket(wsUrl);
+
+        socket.onmessage = function (event) {
+            try {
+                var msg = JSON.parse(event.data);
+                if(msg.senderRole === "admin") {
+                    var win = document.getElementById("client-chat-window");
+                    if(win.style.display !== "flex") {
+                        updateUnreadBadge();
+                    } else {
+                        fetch("ChatAPI?action=getMessages&clientId=" + currentUserId);
+                    }
+                    var timeStr = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                    appendClientMessage("Admin", msg.text, "left", timeStr);
+                }
+            } catch(e) {}
+        };
+    }
+
+    function formatTime(timestampStr) {
+        if(!timestampStr) return "";
+        var d = new Date(timestampStr.replace(' ', 'T'));
+        if(isNaN(d)) return "";
+        return d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    function loadClientChatHistory() {
+        document.getElementById("chat-loading").style.display = "block";
+        fetch("ChatAPI?action=getMessages&clientId=" + currentUserId)
+            .then(response => response.json())
+            .then(data => {
+                var container = document.getElementById("client-chat-messages");
+                container.innerHTML = '<div style="text-align: center; color: #6c757d; font-size: 12px; margin-bottom: 10px;">Hỗ trợ viên sẽ trả lời bạn trong chốc lát!</div>';
+                data.forEach(msg => {
+                    var timeStr = formatTime(msg.created_at);
+                    if(msg.role === "client" || msg.role === "user") {
+                        appendClientMessage("Bạn", msg.text, "right", timeStr);
+                    } else {
+                        appendClientMessage("Admin", msg.text, "left", timeStr);
+                    }
+                });
+                chatLoaded = true;
+                scrollToBottom();
+            })
+            .catch(error => console.error(error))
+            .finally(() => {
+                document.getElementById("chat-loading").style.display = "none";
+            });
+    }
+
+    function appendClientMessage(sender, content, align, timeStr) {
+        var container = document.getElementById("client-chat-messages");
+        var msgDiv = document.createElement("div");
+        msgDiv.className = "chat-msg " + align;
+        var safeContent = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+        msgDiv.innerHTML = safeContent;
+        if(timeStr) {
+            msgDiv.innerHTML += '<span class="chat-time">' + timeStr + '</span>';
+        }
+        container.appendChild(msgDiv);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        var container = document.getElementById("client-chat-messages");
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendClientMessage() {
+        var input = document.getElementById("client-msg-input");
+        var content = input.value.trim();
+        if(content === "") return;
+
+        var timeStr = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+        appendClientMessage("Bạn", content, "right", timeStr);
+        input.value = "";
+        input.style.height = "40px";
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            var msgObj = {
+                clientId: currentUserId,
+                senderRole: "client",
+                text: content
+            };
+            socket.send(JSON.stringify(msgObj));
+        }
+
+        var formData = new URLSearchParams();
+        formData.append("messageText", content);
+        fetch("ChatAPI", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        }).catch(e => console.error(e));
+    }
+
+    var inputEl = document.getElementById("client-msg-input");
+    inputEl.addEventListener("keydown", function(e) {
+        if(e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendClientMessage();
+        }
+    });
+    inputEl.addEventListener("input", function() {
+        this.style.height = "40px";
+        this.style.height = (this.scrollHeight) + "px";
+        if(this.scrollHeight > 100) this.style.overflowY = "auto";
+        else this.style.overflowY = "hidden";
+    });
+    /*]]>*/
+</script>
+</div>
+</body>
+</html>

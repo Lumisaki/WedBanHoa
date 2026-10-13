@@ -1,0 +1,200 @@
+/* ===== ORIGINAL AUTH BODY BACKGROUND ===== */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: url("../images/nen.jpeg") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+/* ===== ORIGINAL GRID HEADERS ===== */
+.title {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.title h1 {
+    margin-bottom: 5px;
+    font-weight: 800;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* ===== ORIGINAL CONTAINER SYSTEM ===== */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+    gap: 80px;
+    width: 100%;
+}
+
+.login-container, .register-container, .forgot-container {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+    color: black;
+}
+
+.login-container, .forgot-container { max-width: 430px; }
+.register-container { max-width: 480px; }
+
+/* ===== ORIGINAL FORM INNER NODES ===== */
+.brand-logo {
+    text-align: center;
+    color: #d63384;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* --- Left branding node --- */
+.left img {
+    width: 350px;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
+}
+
+/* --- Right content box node --- */
+.right {
+    width: 380px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    color: black;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.right h1, .right p, .extra {
+    text-align: center;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #4a5568;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    text-align: left;
+}
+
+.form-group label i {
+    color: #d63384;
+    margin-right: 4px;
+    width: 16px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #f8fafc;
+    transition: 0.3s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus, .form-group select:focus {
+    border-color: #d63384;
+    background: white;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(214, 51, 132, 0.1);
+}
+
+/* ===== CONTROL ATTRIBUTE BUTTONS ===== */
+.btn-login, .btn-register, .btn-reset {
+    width: 100%;
+    background: #d63384;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(214, 51, 132, 0.2);
+}
+
+.btn-login:hover, .btn-register:hover, .btn-reset:hover {
+    background: #c8237e;
+    box-shadow: 0 6px 20px rgba(214, 51, 132, 0.3);
+}
+
+.extra-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.extra-links a {
+    color: #718096;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.extra-links a:hover {
+    color: #d63384;
+    text-decoration: underline;
+}
+
+.extra-links .register-now {
+    color: #d63384;
+    font-weight: 700;
+}
+
+.back-to-login {
+    display: block;
+    text-align: center;
+    margin-top: 25px;
+    color: #718096;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.back-to-login a {
+    color: #d63384;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.back-to-login a:hover {
+    text-decoration: underline;
+}
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+    .login-wrapper, .register-wrapper { margin: 30px auto; padding: 0 12px; }
+    .login-card, .register-card { padding: 28px 18px; border-radius: 14px; }
+}
+
+@media (max-width: 425px) {
+    .login-wrapper, .register-wrapper { margin: 15px auto; padding: 0 8px; }
+    .login-card, .register-card { padding: 20px 14px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
+    .login-card input, .register-card input { padding: 10px 12px; font-size: 14px; }
+    .btn-login, .btn-register { padding: 12px; font-size: 14px; }
+}

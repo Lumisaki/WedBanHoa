@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Mã Giảm Giá | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; border-radius: 8px;
+        }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .history-table th, .history-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .history-table th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1><i class="fas fa-ticket-alt" style="color: #d63384;"></i> Quản Lý Mã Giảm Giá</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div id="content-main">
+                <!-- Form thêm mới -->
+                <div class="table-card" style="margin-bottom: 30px;">
+                    <div class="table-header">
+                        <h3><i class="fas fa-plus-circle" style="color: #10b981;"></i> Thêm Mã Giảm Giá Mới</h3>
+                    </div>
+                    <form th:action="@{/ManageCoupon}" method="post" style="padding: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                        <input type="hidden" name="action" value="add">
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 13px;">Mã code</label>
+                            <input type="text" name="code" required placeholder="VD: SALE50" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 0.7; min-width: 120px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 13px;">Giảm (%)</label>
+                            <input type="number" name="discountPercent" required min="1" max="100" placeholder="10" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 0.7; min-width: 120px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 13px;">Đơn tối thiểu (đ)</label>
+                            <input type="number" name="minOrderValue" required min="0" placeholder="0" value="0" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 13px;">Ngày hết hạn</label>
+                            <input type="date" name="expiryDate" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 0.7; min-width: 120px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 13px;">Trạng thái</label>
+                            <select name="status" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                                <option value="1">Kích hoạt</option>
+                                <option value="0">Tắt</option>
+                            </select>
+                        </div>
+                        <button type="submit" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 42px;">
+                            <i class="fas fa-plus"></i> Thêm
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Bảng danh sách -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-list" style="color: #d63384;"></i> Danh Sách Mã Giảm Giá (<span th:text="${coupons != null ? coupons.size() : 0}"></span> mã)</h3>
+                    </div>
+                    <div class="admin-search-wrapper">
+                        <div class="admin-search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                        </div>
+                    </div>
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Mã Code</th>
+                                <th>Giảm (%)</th>
+                                <th>Đơn tối thiểu</th>
+                                <th>Ngày hết hạn</th>
+                                <th>Trạng thái</th>
+                                <th style="text-align: center;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <th:block th:each="c : ${coupons}">
+                                <tr>
+                                    <td style="color: #94a3b8; font-weight: bold;">#<span th:text="${c.id}"></span></td>
+                                    <td>
+                                        <form th:action="@{/ManageCoupon}" method="post" th:id="'form-coupon-' + ${c.id}">
+                                            <input type="hidden" name="action" value="update">
+                                            <input type="hidden" name="id" th:value="${c.id}">
+                                            <input type="text" name="code" th:value="${c.code}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; width: 100px; font-weight: 600;">
+                                    </td>
+                                    <td><input th:form="'form-coupon-' + ${c.id}" type="number" name="discountPercent" th:value="${c.discountPercent}" min="1" max="100" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; width: 60px; text-align: center;"></td>
+                                    <td><input th:form="'form-coupon-' + ${c.id}" type="number" name="minOrderValue" th:value="${c.minOrderValue != null ? #numbers.formatDecimal(c.minOrderValue, 0, 'POINT', 0, 'POINT') : 0}" min="0" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; width: 90px; text-align: center;"></td>
+                                    <td><input th:form="'form-coupon-' + ${c.id}" type="date" name="expiryDate" th:value="${c.expiryDate}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;"></td>
+                                    <td>
+                                        <select th:form="'form-coupon-' + ${c.id}" name="status" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                                            <option value="1" th:selected="${c.status == 1}">Kích hoạt</option>
+                                            <option value="0" th:selected="${c.status == 0}">Tắt</option>
+                                        </select>
+                                    </td>
+                                    <td style="text-align: center;">
+                                            <button type="submit" th:form="'form-coupon-' + ${c.id}" style="background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 5px;" title="Lưu">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </form>
+                                        <a th:href="@{/ManageCoupon(action='broadcast', id=${c.id})}" style="background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; text-decoration: none; margin-right: 5px;" title="Phát mã cho toàn bộ KH qua chat">
+                                            <i class="fas fa-bullhorn"></i>
+                                        </a>
+                                        <button type="button" th:onclick="'showHistory(' + ${c.id} + ')'" style="background: #8b5cf6; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 5px;" title="Lịch sử">
+                                            <i class="fas fa-history"></i>
+                                        </button>
+                                        <form th:action="@{/ManageCoupon}" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa mã này?')">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" th:value="${c.id}">
+                                            <button type="submit" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </th:block>
+                            <tr th:if="${coupons == null || coupons.empty}">
+                                <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">Chưa có mã giảm giá nào.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+        </div>
+    </div>
+
+    <!-- Modals Lịch sử dùng mã -->
+    <th:block th:if="${usageMap != null}" th:each="entry : ${usageMap}">
+        <div th:id="'modalHistory_' + ${entry.key}" class="modal">
+            <div class="modal-content">
+                <span class="close" th:onclick="'closeModal(\'modalHistory_' + ${entry.key} + '\')'">&times;</span>
+                <h2><i class="fas fa-history" style="color: #8b5cf6;"></i> Lịch sử dùng mã ID: #<span th:text="${entry.key}"></span></h2>
+                
+                <th:block th:if="${entry.value != null && !entry.value.empty}">
+                    <div class="admin-search-wrapper">
+                        <div class="admin-search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                        </div>
+                    </div>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Khách hàng</th>
+                                <th>Mã đơn hàng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <th:block th:each="usage : ${entry.value}">
+                                <tr>
+                                    <td th:text="${usage.usedAt}"></td>
+                                    <td th:text="${usage.userEmail}"></td>
+                                    <td>#<span th:text="${usage.orderId}"></span></td>
+                                </tr>
+                            </th:block>
+                        </tbody>
+                    </table>
+                </th:block>
+                <th:block th:unless="${entry.value != null && !entry.value.empty}">
+                    <p style="padding: 20px; color: #64748b; text-align: center;">Chưa có khách hàng nào sử dụng mã này.</p>
+                </th:block>
+            </div>
+        </div>
+    </th:block>
+
+    <script th:inline="javascript">
+        function showHistory(id) {
+            var modal = document.getElementById('modalHistory_' + id);
+            if (modal) modal.style.display = 'block';
+        }
+        function closeModal(modalId) {
+            var modal = document.getElementById(modalId);
+            if (modal) modal.style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function () {
+            /*[# th:if="${session.msgSuccess != null}"]*/
+            Swal.fire({icon: 'success', title: 'Thành công!', text: /*[[${session.msgSuccess}]]*/ '', confirmButtonColor: '#10b981'});
+            /*[/]*/
+            /*[# th:if="${session.msgError != null}"]*/
+            Swal.fire({icon: 'error', title: 'Lỗi!', text: /*[[${session.msgError}]]*/ '', confirmButtonColor: '#ef4444'});
+            /*[/]*/
+        });
+    </script>
+    <script th:src="@{/js/admin-search.js}"></script>
+</body>
+</html>

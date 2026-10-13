@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cập Nhật Sản Phẩm | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <h2>TIỆM BA HOA</h2>
+            <p>MANAGEMENT</p>
+        </div>
+        <ul class="nav-menu">
+            <li><a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a></li>
+            <li id="menu-main" class="active"><a href="#" onclick="switchTab('main')"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a></li>
+            <li><a th:href="@{/ManagerCustomer}"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
+            <li><a th:href="@{/ManageOrder}"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a></li>
+            <li id="menu-chat"><a href="#" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Hộp thư hỗ trợ <span id="admin-chat-badge">Mới</span></a></li>
+        </ul>
+        <div class="nav-bottom">
+            <ul class="nav-menu" style="padding: 0;">
+                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
+                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1>Cập Nhật Hoa Cửa Hàng</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div id="content-main">
+                <a th:href="@{${fromPage == 'admin' ? '/AdminDashboard' : '/ManagerProduct'}}" class="btn-back" style="margin-bottom: 25px;"><i class="fas fa-arrow-left"></i> Trở Về Danh Sách</a>
+
+                <div class="form-container">
+                    <form th:action="@{/EditProduct}" method="post" class="form-grid" enctype="multipart/form-data">
+                        <input type="hidden" name="fromPage" th:value="${fromPage}">
+                        <div class="form-group full-width">
+                            <label>Tên sản phẩm hoa tươi</label>
+                            <input type="text" name="pname" th:value="${detail.pname}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Giá bán niêm yết (VNĐ)</label>
+                            <input type="number" id="pprice" name="pprice" th:value="${detail.pprice != null ? #numbers.formatDecimal(detail.pprice, 0, 'POINT', 0, 'POINT') : 0}" oninput="calculateFinalPrice()" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Chiết khấu giảm giá (%)</label>
+                            <input type="number" id="pdiscount" name="pdiscount" min="0" max="100" th:value="${detail.discount}" oninput="calculateFinalPrice()" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Số lượng nhập kho</label>
+                            <input type="number" name="pstock" min="1" th:value="${detail.pstock}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Giá bán thực tế sau khi giảm</label>
+                            <input type="text" id="finalPrice" readonly value="0 đ">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mã ID Hệ Thống (Không được sửa)</label>
+                            <input type="text" name="pid" th:value="${detail.id}" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phân loại danh mục hoa</label>
+                            <select name="pcategory">
+                                <th:block th:each="cat : ${listCC}">
+                                    <option th:value="${cat.cid}" th:text="${cat.cname}" th:selected="${detail.cateID == cat.cid}"></option>
+                                </th:block>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Hình ảnh hiện tại & Tải ảnh mới</label>
+                            <div style="display: flex; align-items: center; gap: 15px; margin-top: 5px;">
+                                <img th:src="@{'/images/' + ${detail.pimage}}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;" onerror="this.src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100'">
+                                <input type="hidden" name="old_pimage" th:value="${detail.pimage}">
+                                <input type="file" name="new_pimage" accept="image/*" style="padding: 9px; flex: 1; border: 1px solid #cbd5e1; border-radius: 8px;">
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width" style="margin-top: 20px;">
+                            <label>Mô tả chi tiết</label>
+                            <textarea name="pdescription" rows="5" required th:text="${detail.pdescription}"></textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Lưu Thay Đổi</button>
+                            <a th:href="@{${fromPage == 'admin' ? '/AdminDashboard' : '/ManagerProduct'}}" class="btn-cancel"><i class="fas fa-times"></i> Hủy thao tác</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div th:replace="~{view/admin_chat_layout :: body}"></div>
+        </div>
+    </div>
+
+    <script>
+        function calculateFinalPrice() {
+            var price = parseFloat(document.getElementById('pprice').value);
+            var discount = parseFloat(document.getElementById('pdiscount').value);
+            var finalPriceInput = document.getElementById('finalPrice');
+
+            if (!isNaN(price) && !isNaN(discount)) {
+                var finalPrice = price * (1 - discount / 100);
+                finalPriceInput.value = new Intl.NumberFormat('vi-VN').format(finalPrice) + " đ";
+            } else {
+                finalPriceInput.value = "Chưa hợp lệ";
+            }
+        }
+        document.addEventListener("DOMContentLoaded", calculateFinalPrice);
+    </script>
+</body>
+</html>

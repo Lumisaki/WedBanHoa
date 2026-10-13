@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Danh Mục | Tiệm Ba Hoa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <div class="main-content">
+        <div class="header-top">
+            <h1><i class="fas fa-tags" style="color: #d63384;"></i> Quản Lý Danh Mục Sản Phẩm</h1>
+            <div class="admin-profile">
+                Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <!-- Form thêm mới -->
+            <div class="table-card" style="margin-bottom: 30px;">
+                <div class="table-header">
+                    <h3><i class="fas fa-plus-circle" style="color: #10b981;"></i> Thêm Danh Mục Mới</h3>
+                </div>
+                <form th:action="@{/ManageCategory}" method="post" style="padding: 20px; display: flex; gap: 12px; align-items: flex-end;">
+                    <input type="hidden" name="action" value="add">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 13px;">Tên danh mục</label>
+                        <input type="text" name="cname" required placeholder="VD: Hoa Sinh Nhật" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+                    <button type="submit" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 42px;">
+                        <i class="fas fa-plus"></i> Thêm
+                    </button>
+                </form>
+            </div>
+
+            <!-- Bảng danh sách -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3><i class="fas fa-list" style="color: #d63384;"></i> Danh Sách Danh Mục (<span th:text="${categories != null ? categories.size() : 0}"></span> mục)</h3>
+                </div>
+                <div class="admin-search-wrapper">
+                    <div class="admin-search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                    </div>
+                </div>
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên danh mục</th>
+                            <th style="text-align: center;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <th:block th:each="cat : ${categories}">
+                            <tr>
+                                <td style="color: #94a3b8; font-weight: bold; width: 80px;">#<span th:text="${cat.cid}"></span></td>
+                                <td>
+                                    <form th:action="@{/ManageCategory}" method="post" th:id="'form-cat-' + ${cat.cid}">
+                                        <input type="hidden" name="action" value="update">
+                                        <input type="hidden" name="cid" th:value="${cat.cid}">
+                                        <input type="text" name="cname" th:value="${cat.cname}" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; width: 300px; font-weight: 600;">
+                                    </form>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button type="submit" th:form="'form-cat-' + ${cat.cid}" style="background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 5px;">
+                                        <i class="fas fa-save"></i> Lưu
+                                    </button>
+                                    <form th:action="@{/ManageCategory}" method="post" style="display: inline;" onsubmit="return confirm('Xóa danh mục này? Nếu danh mục có sản phẩm thì không thể xóa!')">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="cid" th:value="${cat.cid}">
+                                        <button type="submit" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </th:block>
+                        <tr th:if="${categories == null || categories.empty}">
+                            <td colspan="3" style="text-align: center; padding: 40px; color: #94a3b8;">Chưa có danh mục nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        window.addEventListener('DOMContentLoaded', function () {
+            /*[# th:if="${session.msgSuccess != null}"]*/
+            Swal.fire({icon: 'success', title: 'Thành công!', text: /*[[${session.msgSuccess}]]*/ '', confirmButtonColor: '#10b981'});
+            /*[/]*/
+            /*[# th:if="${session.msgError != null}"]*/
+            Swal.fire({icon: 'error', title: 'Lỗi!', text: /*[[${session.msgError}]]*/ '', confirmButtonColor: '#ef4444'});
+            /*[/]*/
+        });
+    </script>
+    <script th:src="@{/js/admin-search.js}"></script>
+</body>
+</html>

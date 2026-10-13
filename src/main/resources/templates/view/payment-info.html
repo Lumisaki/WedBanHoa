@@ -1,0 +1,67 @@
+﻿
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hình Thức Thanh Toán - Tiệm Ba Hoa</title>
+    <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+    <link rel="stylesheet" th:href="@{/css/info.css}" href="/css/info.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div th:replace="~{view/header :: body}"></div>
+
+    <div class="info-page-wrapper">
+        <div class="info-header">
+            <h1>Hình Thức Thanh Toán</h1>
+            <p>Đa dạng, Nhanh chóng và Bảo mật</p>
+        </div>
+        
+        <div class="info-content">
+            <div class="info-section">
+                <h2><i class="fas fa-wallet"></i> Phương Thức Thanh Toán</h2>
+                <p>Để tạo sự thuận tiện tối đa cho khách hàng khi mua sắm tại Tiệm Ba Hoa, chúng tôi hỗ trợ đa dạng các hình thức thanh toán sau:</p>
+                
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #333; margin-bottom: 10px;">1. Thanh Toán Khi Nhận Hàng (COD)</h3>
+                    <p>Khách hàng thanh toán bằng tiền mặt trực tiếp cho nhân viên giao hàng sau khi kiểm tra và nhận hoa. Hình thức này áp dụng cho khách hàng đặt hoa tặng cho chính mình hoặc nhận hoa trực tiếp.</p>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #333; margin-bottom: 10px;">2. Chuyển Khoản Ngân Hàng</h3>
+                    <p>Phù hợp cho các đơn hàng điện hoa (tặng người khác). Khách hàng chuyển khoản trước 100% hoặc cọc 50% giá trị đơn hàng. Thông tin tài khoản sẽ hiển thị khi khách hàng chọn phương thức này lúc đặt hàng:</p>
+                    <ul style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                        <li style="list-style: none;"><strong>Ngân hàng:</strong> Vietcombank (VCB)</li>
+                        <li style="list-style: none;"><strong>Số tài khoản:</strong> 1023 456 789</li>
+                        <li style="list-style: none;"><strong>Chủ tài khoản:</strong> TIEM BA HOA CO LTD</li>
+                        <li style="list-style: none;"><strong>Nội dung CK:</strong> Tên người đặt + Số điện thoại</li>
+                    </ul>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #333; margin-bottom: 10px;">3. Thanh Toán Qua Ví Điện Tử (MoMo, ZaloPay, VNPay)</h3>
+                    <p>Khách hàng có thể quét mã QR code của các ví điện tử thông dụng. Giao dịch được xử lý theo thời gian thực và tự động xác nhận trên hệ thống.</p>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h2><i class="fas fa-project-diagram"></i> Quy Trình Thanh Toán Chuyển Khoản</h2>
+                <ul>
+                    <li><strong>Bước 1:</strong> Chọn hoa, điền thông tin người nhận và chọn "Chuyển khoản ngân hàng" tại bước Thanh toán.</li>
+                    <li><strong>Bước 2:</strong> Hệ thống sẽ hiển thị mã QR và thông tin số tài khoản. Khách hàng tiến hành quét mã chuyển khoản.</li>
+                    <li><strong>Bước 3:</strong> Ngay sau khi chuyển khoản thành công, khách hàng có thể gửi biên lai qua Zalo/Fanpage, hoặc hệ thống sẽ tự động cập nhật trạng thái đơn hàng thành "Đã thanh toán" trong vòng 5 phút.</li>
+                    <li><strong>Bước 4:</strong> Cửa hàng tiến hành cắm hoa và chuẩn bị giao hàng.</li>
+                </ul>
+            </div>
+            
+            <div class="info-section">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Xuất Hóa Đơn VAT (Dành cho Doanh nghiệp)</h2>
+                <p>Tiệm Ba Hoa hỗ trợ xuất hóa đơn điện tử (VAT 8% hoặc 10% theo quy định) cho các đơn vị doanh nghiệp, công ty. Quý khách vui lòng cung cấp đầy đủ thông tin xuất hóa đơn (Tên công ty, MST, Địa chỉ, Email nhận hóa đơn) trong phần "Ghi chú đơn hàng" lúc đặt hoa. Hóa đơn sẽ được gửi qua email sau khi hoàn tất giao hàng từ 1-3 ngày làm việc.</p>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{view/footer :: body}"></div>
+</body>
+</html>
+
