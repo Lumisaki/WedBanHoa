@@ -34,7 +34,7 @@
                 </li>
                 
                 <li><a th:href="@{/cart}">Giỏ hàng</a></li>
-                <li><a th:href="@{/checkout}">Thanh toán</a></li>
+                <li><a th:href="@{/checkout}" onclick="return checkLoginBeforeCheckout(event)">Thanh toán</a></li>
             </ul>
         </div>
     </div>
@@ -54,7 +54,7 @@
             <a th:href="@{/index}" class="logo-link">
                 <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="Logo" class="logo-img">
                 <div class="logo-text">
-                    <span class="main-title">TIỆM BA HOA</span>
+                    <span class="main-title">TIỆM NĂM HOA</span>
                     <span class="slogan">RẺ NHƯ CHO - CHẤT LƯỢNG CHẤTTT</span>
                 </div>
             </a>
@@ -125,7 +125,36 @@
         <li><a th:href="@{/index#discount-section}" class="hot-sale"><i class="fas fa-fire"></i> Giảm Giá Sốc</a></li>
     </ul>
 </nav>
-<script>
+<script th:inline="javascript">
+    let isHeaderAlertShowing = false;
+    function checkLoginBeforeCheckout(event) {
+        /*[# th:if="${session.userSession == null}"]*/
+        if (event) {
+            event.preventDefault();
+        }
+        if (isHeaderAlertShowing) return false;
+        isHeaderAlertShowing = true;
+        Swal.fire({
+            icon: 'warning',
+            title: 'Yêu cầu đăng nhập',
+            text: 'Vui lòng đăng nhập tài khoản để tiến hành đặt hàng / thanh toán!',
+            showCancelButton: true,
+            confirmButtonColor: '#d63384',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Đăng nhập ngay',
+            cancelButtonText: 'Để sau',
+            didClose: () => { isHeaderAlertShowing = false; }
+        }).then((result) => {
+            isHeaderAlertShowing = false;
+            if (result.isConfirmed) {
+                window.location.href = /*[[@{/Login}]]*/ '/Login';
+            }
+        });
+        return false;
+        /*[/]*/
+        return true;
+    }
+
     function toggleNavMenu() {
         var nav = document.getElementById('nav-list');
         var overlay = document.getElementById('nav-overlay');

@@ -1,64 +1,71 @@
-﻿
-
-
-<%
-    String activeMenu = request.getParameter("activeMenu");
-    if (activeMenu == null) activeMenu = "dashboard";
-%>
-
-<button class="admin-hamburger" id="admin-hamburger" onclick="toggleAdminSidebar()" aria-label="Menu">
-    <i class="fas fa-bars" id="admin-hamburger-icon"></i>
-</button>
-<div class="admin-sidebar-overlay" id="admin-sidebar-overlay" onclick="toggleAdminSidebar()"></div>
-<div class="sidebar">
-    <div class="brand">
-        <h2>TIỆM BA HOA</h2>
-        <p>MANAGEMENT</p>
-    </div>
-    <ul class="nav-menu">
-        <li class="<%= "dashboard".equals(activeMenu) ? "active" : "" %>">
-            <a th:href="@{/AdminDashboard}" href="/AdminDashboard"><i class="fas fa-chart-line"></i> Dashboard Tổng</a>
-        </li>
-        <li class="<%= "product".equals(activeMenu) ? "active" : "" %>">
-            <a th:href="@{/ManagerProduct}" href="/ManagerProduct"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a>
-        </li>
-        <li class="<%= "category".equals(activeMenu) ? "active" : "" %>">
-            <a th:href="@{/ManageCategory}" href="/ManageCategory"><i class="fas fa-boxes"></i> Quản lý danh mục</a>
-        </li>
-        <li class="<%= "customer".equals(activeMenu) ? "active" : "" %>">
-            <a th:href="@{/ManagerCustomer}" href="/ManagerCustomer"><i class="fas fa-users"></i> Quản lý khách hàng</a>
-        </li>
-        <li class="<%= "order".equals(activeMenu) ? "active" : "" %>">
-            <a th:href="@{/ManageOrder}" href="/ManageOrder"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a>
-        </li>
-        <li class="<%= "coupon".equals(activeMenu) ? "active" : "" %>">
-            <a th:href="@{/ManageCoupon}" href="/ManageCoupon"><i class="fas fa-tags"></i> Quản lý mã giảm giá</a>
-        </li>
-        
-        <li id="menu-chat" class="<%= "chat".equals(activeMenu) ? "active" : "" %>">
-            <a href="#" onclick="switchTab('chat')">
-                <i class="fas fa-comments"></i> Hộp thư hỗ trợ 
-                <span id="admin-chat-badge" style="display: ${unreadAdmin != null && unreadAdmin > 0 ? 'inline-block' : 'none'}; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px;">
-                    ${unreadAdmin != null ? unreadAdmin : 0}
-                </span>
-            </a>
-        </li>
-    </ul>
-    <div class="nav-bottom">
-        <ul class="nav-menu" style="padding: 0;">
-            <li><a th:href="@{/index}" href="/index"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
-            <li><a th:href="@{/Logout}" href="/Logout" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="sidebar(activeMenu)">
+    <button class="admin-hamburger" id="admin-hamburger" onclick="toggleAdminSidebar()" aria-label="Menu">
+        <i class="fas fa-bars" id="admin-hamburger-icon"></i>
+    </button>
+    <div class="admin-sidebar-overlay" id="admin-sidebar-overlay" onclick="toggleAdminSidebar()"></div>
+    <div class="sidebar">
+        <div class="brand">
+            <h2>TIỆM NĂM HOA</h2>
+            <p>MANAGEMENT</p>
+        </div>
+        <ul class="nav-menu">
+            <li th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}">
+                <a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a>
+            </li>
+            <li th:classappend="${activeMenu == 'product' ? 'active' : ''}">
+                <a th:href="@{/ManagerProduct}"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a>
+            </li>
+            <li th:classappend="${activeMenu == 'category' ? 'active' : ''}">
+                <a th:href="@{/ManageCategory}"><i class="fas fa-boxes"></i> Quản lý danh mục</a>
+            </li>
+            <li th:classappend="${activeMenu == 'customer' ? 'active' : ''}">
+                <a th:href="@{/ManagerCustomer}"><i class="fas fa-users"></i> Quản lý tài khoản</a>
+            </li>
+            <li th:classappend="${activeMenu == 'order' ? 'active' : ''}">
+                <a th:href="@{/ManageOrder}"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a>
+            </li>
+            <li th:classappend="${activeMenu == 'coupon' ? 'active' : ''}">
+                <a th:href="@{/ManageCoupon}"><i class="fas fa-tags"></i> Quản lý mã giảm giá</a>
+            </li>
+            <li id="menu-chat" th:classappend="${activeMenu == 'chat' ? 'active' : ''}">
+                <a href="#" onclick="switchTab('chat'); return false;">
+                    <i class="fas fa-comments"></i> Hộp thư hỗ trợ
+                </a>
+            </li>
         </ul>
+        <div class="nav-bottom">
+            <ul class="nav-menu" style="padding: 0;">
+                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
+                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
+            </ul>
+        </div>
     </div>
+    <script>
+    function toggleAdminSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        var overlay = document.getElementById('admin-sidebar-overlay');
+        var icon = document.getElementById('admin-hamburger-icon');
+        if (sidebar) sidebar.classList.toggle('admin-open');
+        if (overlay) overlay.classList.toggle('admin-open');
+        if (icon && sidebar) {
+            icon.className = sidebar.classList.contains('admin-open') ? 'fas fa-times' : 'fas fa-bars';
+        }
+    }
+    function switchTab(tab) {
+        var contentMain = document.getElementById('content-main');
+        var contentChat = document.getElementById('content-chat');
+        if (tab === 'chat') {
+            if (contentMain) contentMain.style.display = 'none';
+            if (contentChat) contentChat.style.display = 'block';
+        } else {
+            if (contentMain) contentMain.style.display = 'block';
+            if (contentChat) contentChat.style.display = 'none';
+        }
+    }
+    </script>
 </div>
-<script>
-function toggleAdminSidebar() {
-    var sidebar = document.querySelector('.sidebar');
-    var overlay = document.getElementById('admin-sidebar-overlay');
-    var icon = document.getElementById('admin-hamburger-icon');
-    sidebar.classList.toggle('admin-open');
-    overlay.classList.toggle('admin-open');
-    icon.className = sidebar.classList.contains('admin-open') ? 'fas fa-times' : 'fas fa-bars';
-}
-</script>
-
+</body>
+</html>

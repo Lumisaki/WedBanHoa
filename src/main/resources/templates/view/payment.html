@@ -2,74 +2,234 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Phương Thức Thanh Toán | Tiệm Ba Hoa</title>
+    <title>Thanh Toán Chuyển Khoản Ngân Hàng | Tiệm Năm Hoa</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/index.css?v=4.0}" href="/css/index.css?v=4.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .bank-pay-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .bank-pay-header {
+            background: linear-gradient(135deg, #d63384, #be185d);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .bank-pay-body {
+            padding: 35px;
+        }
+        .qr-card-box {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px dashed #cbd5e1;
+            margin-bottom: 25px;
+        }
+        .qr-img-large {
+            width: 240px;
+            height: 240px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .bank-info-table {
+            flex: 1;
+        }
+        .bank-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .bank-info-row:last-child {
+            border-bottom: none;
+        }
+        .bank-info-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .bank-info-val {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .copy-btn {
+            background: #e2e8f0;
+            color: #475569;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .copy-btn:hover {
+            background: #cbd5e1;
+        }
+        .status-alert-box {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            color: #92400e;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .action-btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .btn-confirm-transfer {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-confirm-transfer:hover {
+            background: #059669;
+        }
+        .btn-view-order {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
 </head>
 <body>
 
     <div th:replace="~{view/header :: body}"></div>
 
-    <div class="payment-wrapper">
-        <a th:href="@{/checkout}" class="btn-nav-navigation" style="margin-bottom: 20px;">
-            <i class="fas fa-arrow-left"></i> Quay lại thanh toán
-        </a>
-        <div class="payment-card">
-            <h2><i class="fas fa-wallet"></i> Chọn Phương Thức Thanh Toán</h2>
-            
-            <form th:action="@{/payment}" method="post">
+    <div class="bank-pay-container">
+        <div class="bank-pay-header">
+            <h1 style="margin: 0 0 10px 0; font-size: 24px;"><i class="fas fa-university"></i> Thanh Toán Chuyển Khoản Ngân Hàng</h1>
+            <p style="margin: 0; opacity: 0.9; font-size: 14px;">Quét mã VietQR hoặc chuyển khoản trực tiếp tới tài khoản Tiệm Năm Hoa</p>
+        </div>
 
-                <input type="hidden" name="orderId" th:value="${order != null ? order.order_id : ''}">
-                
-                <label class="payment-method-option">
-                    <input type="radio" name="paymentMethod" value="COD" th:checked="${isDirect == 'true' || isDirect == null}" required>
-                    <div class="method-text-block">
-                        <span class="method-title-span">Thanh toán tiền mặt khi nhận hoa (COD)</span>
-                        <span class="method-desc-p">Thanh toán trực tiếp cho shipper khi hoa được giao đến tận tay bạn.</span>
+        <div class="bank-pay-body">
+            <div class="status-alert-box">
+                <i class="fas fa-info-circle" style="font-size: 18px; margin-right: 6px;"></i>
+                <strong>Trạng thái đơn: Chờ xác nhận chuyển khoản.</strong>
+                <br>Đơn hàng <strong>#<span th:text="${order != null ? order.order_id : ''}"></span></strong> đã được ghi nhận. Vui lòng chuyển khoản đúng số tiền và nội dung bên dưới. Sau khi nhận được chuyển khoản, Admin sẽ duyệt đơn và shop tiến hành cắm hoa giao đến bạn.
+            </div>
+
+            <div class="qr-card-box">
+                <!-- Mã QR chuyển khoản từ thư mục ảnh dự án -->
+                <div style="text-align: center;">
+                    <img th:src="@{'/images/' + ${bankSetting != null && bankSetting.qrImage != null ? bankSetting.qrImage : 'thanhtoan.jpg'}}" 
+                         alt="Mã QR Chuyển Khoản" 
+                         class="qr-img-large"
+                         onerror="this.src='/images/thanhtoan.jpg'">
+                    <div style="margin-top: 8px; font-size: 12px; color: #64748b; font-weight: 600;">
+                        <i class="fas fa-camera"></i> Mở App Ngân Hàng để quét QR
                     </div>
-                    <div class="method-icon-div"><i class="fas fa-hand-holding-usd" style="color: #10b981;"></i></div>
-                </label>
-
-                <label class="payment-method-option">
-                    <input type="radio" name="paymentMethod" value="Online" th:checked="${isDirect == 'false'}" required>
-                    <div class="method-text-block">
-                        <span class="method-title-span">Chuyển khoản Ngân hàng Online quét mã QR</span>
-                        <span class="method-desc-p">An toàn, bảo mật và nhanh chóng. Phù hợp tuyệt đối khi bạn đặt cắm hoa gửi tặng bạn bè, người thân.</span>
-                    </div>
-                    <div class="method-icon-div"><i class="fas fa-qrcode" style="color: #d63384;"></i></div>
-                </label>
-
-                <div id="qr_container" th:style="${isDirect == 'false' ? 'display: block;' : 'display: none;'}">
-                    <p class="qr-msg-highlight"><i class="fas fa-info-circle"></i> Vui lòng mở ứng dụng ngân hàng quét mã QR để thanh toán:</p>
-                    <img th:src="@{/images/thanhtoan.jpg}" alt="Mã QR Thanh Toán" class="qr-img-payment" onerror="this.src='https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=300'">
-                    <p class="qr-caption">Nội dung chuyển khoản: <strong>Đóng tiền đơn hoa <span th:text="${order != null ? order.order_id : ''}"></span></strong></p>
                 </div>
 
-                <div class="payment-summary-box">
-                    <span>Tổng tiền cần thanh toán:</span>
-                    <strong th:text="${order != null && order.total_price != null ? #numbers.formatDecimal(order.total_price, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}"></strong>
+                <div class="bank-info-table">
+                    <div class="bank-info-row">
+                        <span class="bank-info-label">Ngân hàng thụ hưởng:</span>
+                        <span class="bank-info-val"><strong style="color: #0284c7;" th:text="${bankSetting != null ? bankSetting.bankName : 'MB Bank (Quân Đội)'}">MB Bank (Quân Đội)</strong></span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="bank-info-label">Số tài khoản:</span>
+                        <span class="bank-info-val">
+                            <span id="stk_val" th:text="${bankSetting != null ? bankSetting.accountNumber : '0789273903'}">0789273903</span>
+                            <button type="button" class="copy-btn" onclick="copyText('stk_val')"><i class="fas fa-copy"></i> Sao chép</button>
+                        </span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="bank-info-label">Chủ tài khoản:</span>
+                        <span class="bank-info-val" th:text="${bankSetting != null ? bankSetting.accountHolder : 'TIEM NAM HOA'}">TIEM NAM HOA</span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="bank-info-label">Số tiền cần chuyển:</span>
+                        <span class="bank-info-val" style="color: #d63384; font-size: 18px;">
+                            <span id="amount_val" th:text="${order != null && order.total_price != null ? #numbers.formatDecimal(order.total_price, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}"></span>
+                        </span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="bank-info-label">Nội dung chuyển khoản:</span>
+                        <span class="bank-info-val">
+                            <span id="content_val" style="color: #b91c1c;" th:text="'DH' + ${order != null ? order.order_id : ''}"></span>
+                            <button type="button" class="copy-btn" onclick="copyText('content_val')"><i class="fas fa-copy"></i> Sao chép</button>
+                        </span>
+                    </div>
                 </div>
+            </div>
 
-                <button type="submit" class="btn-complete-payment">
-                    HOÀN TẤT ĐẶT HÀNG <i class="fas fa-check-circle"></i>
-                </button>
-            </form>
+            <div class="action-btn-group">
+                <a th:href="@{/OrderDetail(orderId=${order != null ? order.order_id : 0})}" class="btn-confirm-transfer" onclick="notifyTransferSuccess(event, this.href)">
+                    <i class="fas fa-check-circle"></i> TÔI ĐÃ CHUYỂN KHOẢN XONG
+                </a>
+                <a th:href="@{/OrderDetail(orderId=${order != null ? order.order_id : 0})}" class="btn-view-order">
+                    <i class="fas fa-receipt"></i> Xem đơn hàng
+                </a>
+            </div>
         </div>
     </div>
 
     <script>
-        document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                var qrBox = document.getElementById('qr_container');
-                if (this.value === 'Online') {
-                    qrBox.style.display = 'block';
-                } else {
-                    qrBox.style.display = 'none';
-                }
+        function copyText(elementId) {
+            var text = document.getElementById(elementId).innerText.trim();
+            navigator.clipboard.writeText(text).then(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Đã sao chép!',
+                    text: text,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             });
-        });
-    </script>
-    <div th:replace="~{view/footer :: body}"></div> 
+        }
 
+        function notifyTransferSuccess(e, redirectUrl) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'success',
+                title: 'Đã ghi nhận yêu cầu!',
+                text: 'Hệ thống đã ghi nhận bạn đã chuyển khoản. Quản trị viên Tiệm Năm Hoa sẽ kiểm tra sao kê và xác nhận đơn ngay khi nhận được tiền.',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'Đến xem chi tiết đơn hàng'
+            }).then(() => {
+                window.location.href = redirectUrl;
+            });
+        }
+    </script>
+
+    <div th:replace="~{view/footer :: body}"></div> 
 </body>
 </html>

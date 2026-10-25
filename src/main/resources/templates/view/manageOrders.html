@@ -5,8 +5,80 @@
     <title>Quản Lý Đơn Hàng | Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .order-filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .filter-tab:hover, .filter-tab.active {
+            background: #1e293b;
+            color: white;
+            border-color: #1e293b;
+        }
+        .badge-count {
+            background: rgba(255,255,255,0.25);
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .filter-tab:not(.active) .badge-count {
+            background: #e2e8f0;
+            color: #334155;
+        }
+        .filter-tab.tab-waiting {
+            border-color: #8b5cf6;
+            color: #6d28d9;
+            background: #f5f3ff;
+        }
+        .filter-tab.tab-waiting.active {
+            background: #7c3aed;
+            color: white;
+        }
+        .btn-confirm-pay {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-reject-pay {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+
+    <div th:replace="~{view/admin_sidebar :: sidebar('order')}"></div>
 
     <div class="main-content">
         <div class="header-top">
@@ -26,22 +98,44 @@
                     <div class="table-header">
                         <h3><i class="fas fa-list-ul" style="color: #d63384; margin-right: 8px;"></i> Danh Sách Toàn Bộ Đơn Đặt Hoa</h3>
                     </div>
+
+                    <!-- Tabs Bộ lọc trạng thái đơn hàng -->
+                    <div class="order-filter-tabs">
+                        <a th:href="@{/ManageOrder(status='all')}" th:classappend="${currentStatus == 'all' || currentStatus == null ? 'active' : ''}" class="filter-tab">
+                            Tất cả <span class="badge-count" th:text="${statusCounts != null ? statusCounts['all'] : 0}"></span>
+                        </a>
+                        <a th:href="@{/ManageOrder(status='Waiting Payment')}" th:classappend="${currentStatus == 'Waiting Payment' ? 'active' : ''}" class="filter-tab tab-waiting">
+                            <i class="fas fa-university"></i> Chờ xác nhận CK <span class="badge-count" th:text="${statusCounts != null ? statusCounts['waitingPayment'] : 0}"></span>
+                        </a>
+                        <a th:href="@{/ManageOrder(status='Pending')}" th:classappend="${currentStatus == 'Pending' ? 'active' : ''}" class="filter-tab">
+                            <i class="far fa-clock"></i> Chờ Duyệt (COD) <span class="badge-count" th:text="${statusCounts != null ? statusCounts['pending'] : 0}"></span>
+                        </a>
+                        <a th:href="@{/ManageOrder(status='Processing')}" th:classappend="${currentStatus == 'Processing' ? 'active' : ''}" class="filter-tab">
+                            <i class="fas fa-truck"></i> Đang Cắm/Giao <span class="badge-count" th:text="${statusCounts != null ? statusCounts['processing'] : 0}"></span>
+                        </a>
+                        <a th:href="@{/ManageOrder(status='Completed')}" th:classappend="${currentStatus == 'Completed' ? 'active' : ''}" class="filter-tab">
+                            <i class="fas fa-check-double"></i> Hoàn Thành <span class="badge-count" th:text="${statusCounts != null ? statusCounts['completed'] : 0}"></span>
+                        </a>
+                        <a th:href="@{/ManageOrder(status='Cancelled')}" th:classappend="${currentStatus == 'Cancelled' ? 'active' : ''}" class="filter-tab">
+                            <i class="fas fa-ban"></i> Đã Hủy <span class="badge-count" th:text="${statusCounts != null ? statusCounts['cancelled'] : 0}"></span>
+                        </a>
+                    </div>
                     
                     <div class="admin-search-wrapper">
                         <div class="admin-search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                            <input type="text" placeholder="Tìm kiếm nhanh tên, sđt, mã đơn..." onkeyup="filterAdminTable(this)">
                         </div>
                     </div>
                     
                     <table style="width: 100%;">
                         <thead>
                             <tr>
-                                <th style="width: 15%;">Mã Đơn</th>
+                                <th style="width: 12%;">Mã Đơn</th>
                                 <th style="width: 25%;">Thông tin Giao Dịch</th>
-                                <th style="width: 15%;">Tổng Tiền & Hình thức</th>
-                                <th style="width: 35%;">Cập Nhật Trạng Thái</th>
-                                <th style="width: 10%; text-align: center;">Chi Tiết</th>
+                                <th style="width: 18%;">Tổng Tiền & Hình thức</th>
+                                <th style="width: 33%;">Trạng Thái & Thao Tác Duyệt</th>
+                                <th style="width: 12%; text-align: center;">Chi Tiết</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -52,25 +146,56 @@
                                         <span style="font-size: 12px; color: #94a3b8;" th:text="${o.order_date}"></span>
                                     </td>
                                     <td>
-                                        <div style="font-size: 13px;"><i class="fas fa-user" style="color: #64748b;"></i> Người đặt: <strong style="color: #1e293b;" th:text="${o.sender_name}"></strong></div>
+                                        <div style="font-size: 13px;"><i class="fas fa-user" style="color: #64748b;"></i> Người đặt: <strong style="color: #1e293b;" th:text="${o.sender_name}"></strong> (<span th:text="${o.sender_phone}"></span>)</div>
                                         <div style="margin-top: 5px; font-size: 13px;"><i class="fas fa-gift" style="color:#d63384;"></i> Nhận hàng: <strong style="color: #1e293b;" th:text="${o.receiver_name}"></strong></div>
+                                        <div style="margin-top: 3px; font-size: 12px; color: #64748b;" th:text="${o.receiver_city}"></div>
                                     </td>
                                     <td>
                                         <div class="price-text" th:text="${#numbers.formatDecimal(o.total_price != null ? o.total_price : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></div>
-                                        <div style="margin-top: 5px;"><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: #475569;" th:text="${o.payment_method}"></span></div>
+                                        <div style="margin-top: 5px;">
+                                            <span th:if="${o.payment_method == 'Bank Transfer' || o.payment_method == 'BankTransfer' || o.payment_method == 'Online'}" 
+                                                  style="background: #ede9fe; color: #6d28d9; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+                                                <i class="fas fa-university"></i> Chuyển khoản QR
+                                            </span>
+                                            <span th:unless="${o.payment_method == 'Bank Transfer' || o.payment_method == 'BankTransfer' || o.payment_method == 'Online'}" 
+                                                  style="background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+                                                <i class="fas fa-money-bill-wave" style="color:#10b981;"></i> COD Tiền mặt
+                                            </span>
+                                        </div>
                                     </td>
                                     
                                     <td>
+                                        <!-- Khối duyệt thanh toán nhanh cho đơn Chờ chuyển khoản -->
+                                        <div th:if="${o.status == 'Waiting Payment'}" style="margin-bottom: 8px; display: flex; gap: 6px; align-items: center;">
+                                            <form th:action="@{/Admin/ConfirmBankPayment}" method="post" style="display: inline;" onsubmit="return confirm('Xác nhận đã nhận được tiền chuyển khoản ngân hàng cho đơn #' + [[${o.order_id}]] + '?')">
+                                                <input type="hidden" name="orderId" th:value="${o.order_id}">
+                                                <input type="hidden" name="from" value="manage">
+                                                <button type="submit" class="btn-confirm-pay" title="Xác nhận đã nhận tiền">
+                                                    <i class="fas fa-check"></i> Duyệt tiền CK
+                                                </button>
+                                            </form>
+                                            <form th:action="@{/Admin/RejectBankPayment}" method="post" style="display: inline;" onsubmit="return confirm('Hủy đơn #' + [[${o.order_id}]] + ' do khách chưa thanh toán tiền?')">
+                                                <input type="hidden" name="orderId" th:value="${o.order_id}">
+                                                <input type="hidden" name="from" value="manage">
+                                                <button type="submit" class="btn-reject-pay" title="Từ chối / Hủy đơn">
+                                                    <i class="fas fa-times"></i> Hủy
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Form cập nhật trạng thái chung -->
                                         <form th:action="@{/UpdateOrderStatus}" method="post" class="flex-row-action">
                                             <input type="hidden" name="orderId" th:value="${o.order_id}">
+                                            <input type="hidden" name="filterStatus" th:value="${currentStatus}">
                                             
-                                            <select name="status" style="padding: 8px 10px; border-radius: 6px;">
-                                                <option value="Pending" th:selected="${o.status == 'Pending'}">Chờ Duyệt</option>
+                                            <select name="status" style="padding: 6px 8px; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                                                <option value="Waiting Payment" th:selected="${o.status == 'Waiting Payment'}" style="color: #7c3aed; font-weight: bold;">Chờ xác nhận CK</option>
+                                                <option value="Pending" th:selected="${o.status == 'Pending'}">Chờ Duyệt (COD)</option>
                                                 <option value="Processing" th:selected="${o.status == 'Processing'}">Đang Cắm/Giao</option>
                                                 <option value="Completed" th:selected="${o.status == 'Completed'}">Hoàn Thành</option>
                                                 <option value="Cancelled" th:selected="${o.status == 'Cancelled'}">Hủy đơn</option>
                                             </select>
-                                            <button type="submit" class="btn-update" style="padding: 8px 15px;"><i class="fas fa-save"></i> LƯU</button>
+                                            <button type="submit" class="btn-update" style="padding: 6px 12px;"><i class="fas fa-save"></i> LƯU</button>
                                         </form>
                                     </td>
                                     <td style="text-align: center;">
@@ -79,7 +204,7 @@
                                 </tr>
                             </th:block>
                             <tr th:if="${allOrders == null || allOrders.empty}">
-                                <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">Hệ thống chưa có đơn đặt hàng nào!</td>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">Hệ thống chưa có đơn đặt hàng nào trong mục này!</td>
                             </tr>
                         </tbody>
                     </table>
@@ -100,5 +225,15 @@
     </div>
 
     <script th:src="@{/js/admin-search.js}"></script>
+    <script th:inline="javascript">
+        window.addEventListener('DOMContentLoaded', function () {
+            /*[# th:if="${msgSuccess != null}"]*/
+            Swal.fire({icon: 'success', title: 'Thành công!', text: /*[[${msgSuccess}]]*/ '', confirmButtonColor: '#10b981'});
+            /*[/]*/
+            /*[# th:if="${msgError != null}"]*/
+            Swal.fire({icon: 'error', title: 'Lỗi thao tác!', text: /*[[${msgError}]]*/ '', confirmButtonColor: '#ef4444'});
+            /*[/]*/
+        });
+    </script>
 </body>
 </html>

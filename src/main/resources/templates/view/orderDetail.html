@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="'Chi Tiết Đơn Hàng #' + ${order != null ? order.order_id : ''} + ' | Tiệm Ba Hoa'">Chi Tiết Đơn Hàng | Tiệm Ba Hoa</title>
+    <title th:text="'Chi Tiết Đơn Hàng #' + ${order != null ? order.order_id : ''} + ' | Tiệm Năm Hoa'">Chi Tiết Đơn Hàng | Tiệm Năm Hoa</title>
     <link rel="stylesheet" th:href="@{/css/index.css?v=5.0}" href="/css/index.css?v=5.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -150,12 +150,21 @@
                     <div class="info-row"><span>Mã đơn đặt:</span> <strong>#<span th:text="${order.order_id}"></span></strong></div>
                     <div class="info-row">
                         <span>Trạng thái:</span> 
-                        <span th:if="${order.status == 'Pending'}" class="status-badge st-pending">Chờ Duyệt</span>
+                        <span th:if="${order.status == 'Waiting Payment'}" class="status-badge" style="background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd;">Chờ xác nhận CK</span>
+                        <span th:if="${order.status == 'Pending'}" class="status-badge st-pending">Chờ Duyệt (COD)</span>
                         <span th:if="${order.status == 'Processing'}" class="status-badge st-processing">Đang Cắm/Giao</span>
                         <span th:if="${order.status == 'Completed'}" class="status-badge st-completed">Đã Hoàn Thành</span>
                         <span th:if="${order.status == 'Cancelled'}" class="status-badge st-cancelled">Đã Hủy</span>
                     </div>
-                    <div class="info-row"><span>Hình thức trả:</span> <strong style="color: #0284c7;" th:text="${order.payment_method}"></strong></div>
+                    <div class="info-row">
+                        <span>Hình thức trả:</span> 
+                        <strong style="color: #0284c7;" th:text="${order.payment_method}"></strong>
+                    </div>
+                    <div th:if="${order.status == 'Waiting Payment'}" style="margin-top: 10px; padding: 10px; background: #faf5ff; border-radius: 8px; border: 1px dashed #c084fc; text-align: center;">
+                        <a th:href="@{/PaymentTransfer(orderId=${order.order_id})}" style="color: #7c3aed; font-weight: 700; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-qrcode"></i> Xem lại Mã QR & Hướng dẫn chuyển khoản
+                        </a>
+                    </div>
                 </div>
 
                 <div class="detail-card">

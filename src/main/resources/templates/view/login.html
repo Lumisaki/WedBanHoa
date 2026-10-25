@@ -2,14 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng Nhập | Tiệm Ba Hoa</title>
+    <title>Đăng Nhập | Tiệm Năm Hoa</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" th:href="@{/css/loginregister.css}" href="/css/loginregister.css">
 </head>
 <body>
     <div class="login-container">
-        <div class="brand-logo">Tiệm Ba Hoa</div>
+        <div class="brand-logo">Tiệm Năm Hoa</div>
         <p style="text-align: center; color: #64748b; margin-top: 0; margin-bottom: 35px; font-weight: 500; font-size: 14px;">Cung cấp thông tin đăng nhập hợp lệ của bạn</p> 
         <form th:action="@{/Login}" method="post">
             <div class="form-group">
@@ -35,12 +35,8 @@
             Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: /*[[${error}]]*/ 'Sai email hoặc mật khẩu', confirmButtonColor: '#d63384' });
             /*[/]*/
 
-            /*[# th:if="${session.errorMsg != null}"]*/
-            Swal.fire({ icon: 'warning', title: 'Yêu cầu đăng nhập', text: /*[[${session.errorMsg}]]*/ '', confirmButtonColor: '#d63384' });
-            /*[/]*/
-
-            /*[# th:if="${session.successMsg != null}"]*/
-            Swal.fire({ icon: 'success', title: 'Thành công', text: /*[[${session.successMsg}]]*/ '', confirmButtonColor: '#d63384' });
+            /*[# th:if="${successMsg != null}"]*/
+            Swal.fire({ icon: 'success', title: 'Thành công', text: /*[[${successMsg}]]*/ '', confirmButtonColor: '#d63384' });
             /*[/]*/
         }
     </script>

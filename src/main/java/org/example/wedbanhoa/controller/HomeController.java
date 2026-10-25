@@ -19,10 +19,16 @@ public class HomeController extends BaseController {
         setHeaderData(model, session);
         List<ProductResponse> discounted = productService.getHomeDiscountedProducts();
         model.addAttribute("dataProducts", discounted);
+
+        String successMsg = (String) session.getAttribute("successMsg");
+        if (successMsg != null) {
+            model.addAttribute("successMsg", successMsg);
+            session.removeAttribute("successMsg");
+        }
         return "view/index";
     }
 
-    @GetMapping("/Category")
+    @GetMapping({"/Category", "/category"})
     public String categoryPage(@RequestParam("cid") Integer cid,
                                @RequestParam(value = "page", defaultValue = "1") int page,
                                Model model, HttpSession session) {
@@ -41,7 +47,7 @@ public class HomeController extends BaseController {
         return "view/category";
     }
 
-    @GetMapping("/Search")
+    @GetMapping({"/Search", "/search"})
     public String search(@RequestParam(value = "keyword", required = false) String keyword,
                          @RequestParam(value = "page", defaultValue = "1") int page,
                          Model model, HttpSession session) {
@@ -55,5 +61,15 @@ public class HomeController extends BaseController {
         model.addAttribute("totalPages", Math.max(1, productPage.getTotalPages()));
         model.addAttribute("pageUrlPattern", "Search?keyword=" + (keyword != null ? keyword : "") + "&page=");
         return "view/index";
+    }
+
+    // Endpoint REST API phục vụ test Postman & Demo thuyết trình N+1
+    @GetMapping({"/api/products", "/api/category"})
+    @org.springframework.web.bind.annotation.ResponseBody
+    public List<ProductResponse> getProductsApi(@RequestParam(value = "cid", required = false) Integer cid) {
+        if (cid != null) {
+            return productService.searchAndSortProducts(null, String.valueOf(cid), "default");
+        }
+        return productService.getAllProducts();
     }
 }

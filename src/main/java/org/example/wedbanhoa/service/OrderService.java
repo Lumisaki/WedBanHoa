@@ -1,12 +1,9 @@
 package org.example.wedbanhoa.service;
 
-import org.example.wedbanhoa.dto.OderDetailRequest;
 import org.example.wedbanhoa.dto.OderDetailResponse;
 import org.example.wedbanhoa.dto.OderRequest;
 import org.example.wedbanhoa.dto.OderResponse;
-import org.example.wedbanhoa.entity.Order;
-import org.example.wedbanhoa.entity.OrderDetail;
-import org.example.wedbanhoa.entity.Product;
+import org.example.wedbanhoa.entity.*;
 import org.example.wedbanhoa.repository.OrderDetailRepository;
 import org.example.wedbanhoa.repository.OrderRepository;
 import org.example.wedbanhoa.repository.ProductRepository;
@@ -14,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,32 +43,87 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public List<Double> getMonthlyRevenues(int year) {
+        List<Double> monthly = new ArrayList<>(Collections.nCopies(12, 0.0));
+        try {
+            List<Object[]> rows = orderRepository.getMonthlyRevenueByYear(year);
+            for (Object[] row : rows) {
+                if (row[0] != null && row[1] != null) {
+                    int month = ((Number) row[0]).intValue();
+                    double total = ((Number) row[1]).doubleValue();
+                    if (month >= 1 && month <= 12) {
+                        monthly.set(month - 1, total);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return monthly;
+    }
+
+    @Transactional(readOnly = true)
     public List<OderResponse> getOrderHistoryByUserId(Integer userId) {
         return orderRepository.findByUserIdAndStatusNotOrderByOrderDateDesc(userId, "Unpaid").stream()
-                .map(this::toResponse) // Gọi hàm mapping nội bộ
+                .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<OderResponse> getAllOrdersForAdmin() {
-        return orderRepository.findByStatusNotOrderByOrderDateDesc("Unpaid").stream()
-                .map(this::toResponse) // Gọi hàm mapping nội bộ
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public Page<OderResponse> getAllOrdersForAdminPaged(int page, int pageSize) {
-        Page<Order> orderPage = orderRepository.findByStatusNotOrderByOrderDateDesc("Unpaid", PageRequest.of(page - 1, pageSize));
+    public Page<OderResponse> getAllOrdersForAdminFiltered(String statusFilter, int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page - 1, pageSize);
+        Page<Order> orderPage;
+        if (statusFilter != null && !statusFilter.trim().isEmpty() && !"all".equalsIgnoreCase(statusFilter.trim())) {
+            orderPage = orderRepository.findByStatusOrderByOrderDateDesc(statusFilter.trim(), pageable);
+        } else {
+            orderPage = orderRepository.findByStatusNotOrderByOrderDateDesc("Unpaid", pageable);
+        }
         List<OderResponse> dtoList = orderPage.getContent().stream()
-                .map(this::toResponse) // Gọi hàm mapping nội bộ
+                .map(this::toResponse)
                 .toList();
         return new PageImpl<>(dtoList, orderPage.getPageable(), orderPage.getTotalElements());
+    }
+
+    public Map<String, Long> getOrderStatusCounts() {
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("all", orderRepository.countValidOrders());
+        counts.put("waitingPayment", orderRepository.countByStatus("Waiting Payment"));
+        counts.put("pending", orderRepository.countByStatus("Pending"));
+        counts.put("processing", orderRepository.countByStatus("Processing"));
+        counts.put("completed", orderRepository.countByStatus("Completed"));
+        counts.put("cancelled", orderRepository.countByStatus("Cancelled"));
+        return counts;
+    }
+
+    @Transactional
+    public boolean confirmBankPayment(Integer orderId) {
+        Order order = getOrderEntityById(orderId);
+        if (order != null) {
+            order.setStatus("Processing");
+            if (order.getPaymentMethod() == null || !order.getPaymentMethod().contains("Đã xác nhận")) {
+                order.setPaymentMethod("BankTransfer (Đã duyệt)");
+            }
+            orderRepository.save(order);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public boolean rejectBankPayment(Integer orderId, String reason) {
+        Order order = getOrderEntityById(orderId);
+        if (order != null) {
+            order.setStatus("Cancelled");
+            String currentReq = order.getSpecialRequests() != null ? order.getSpecialRequests() : "";
+            order.setSpecialRequests(currentReq + " [Lý do hủy: " + (reason != null ? reason : "Chưa thanh toán ngân hàng") + "]");
+            orderRepository.save(order);
+            return true;
+        }
+        return false;
     }
 
     @Transactional(readOnly = true)
     public OderResponse getOrderById(Integer orderId) {
         return orderRepository.findById(orderId)
-                .map(this::toResponse) // Gọi hàm mapping nội bộ
+                .map(this::toResponse)
                 .orElse(null);
     }
 
@@ -81,18 +134,15 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<OderDetailResponse> getOrderDetails(Integer orderId) {
-        List<OrderDetail> details = orderDetailRepository.findByOrderId(orderId);
+        List<OrderDetail> details = orderDetailRepository.findByOrderIdWithProduct(orderId);
         return details.stream().map(d -> {
             String pName = "";
             String pImage = "";
-            if (d.getProductId() != null) {
-                Product p = productRepository.findById(d.getProductId()).orElse(null);
-                if (p != null) {
-                    pName = p.getProductName();
-                    pImage = p.getImage();
-                }
+            if (d.getProduct() != null) {
+                pName = d.getProduct().getProductName();
+                pImage = d.getProduct().getImage();
             }
-            return toDetailResponse(d, pName, pImage); // Gọi hàm mapping nội bộ
+            return toDetailResponse(d, pName, pImage);
         }).toList();
     }
 
@@ -109,7 +159,7 @@ public class OrderService {
             if (p != null) {
                 double finalPrice = p.getPrice();
                 if (p.getDiscount() != null && p.getDiscount() > 0) {
-                    finalPrice = p.getPrice() * (1 - p.getDiscount() / 100.0); // Đã fix cú pháp tính discount
+                    finalPrice = p.getPrice() * (1 - p.getDiscount() / 100.0);
                 }
                 OrderDetail detail = OrderDetail.builder()
                         .orderId(savedOrder.getOrderId())
@@ -125,9 +175,9 @@ public class OrderService {
 
     @Transactional
     public OderResponse placeOrderFromRequest(OderRequest request, Map<Integer, Integer> cart) {
-        Order order = toEntity(request); // Gọi hàm mapping nội bộ
+        Order order = toEntity(request);
         Order saved = placeOrder(order, cart);
-        return toResponse(saved); // Gọi hàm mapping nội bộ
+        return toResponse(saved);
     }
 
     @Transactional
@@ -172,7 +222,7 @@ public class OrderService {
     }
 
     // =========================================================================
-    // CÁC HÀM MAPPING ĐƯỢC CHUYỂN TRỰC TIẾP VÀO ĐÂY
+    // CÁC HÀM MAPPING NỘI BỘ (DTO <-> ENTITY)
     // =========================================================================
 
     private Order toEntity(OderRequest request) {
@@ -194,8 +244,8 @@ public class OrderService {
                 .deliveryDate(request.getDeliveryDate())
                 .deliveryTime(request.getDeliveryTime())
                 .cardMessage(request.getCardMessage())
-                .vatAmount(request.getVatAmount())
                 .specialRequests(request.getSpecialRequests())
+                .vatAmount(request.getVatAmount())
                 .couponCode(request.getCouponCode())
                 .discountAmount(request.getDiscountAmount())
                 .paymentMethod(request.getPaymentMethod())
@@ -226,17 +276,6 @@ public class OrderService {
                 .couponCode(entity.getCouponCode())
                 .discountAmount(entity.getDiscountAmount())
                 .paymentMethod(entity.getPaymentMethod())
-                .build();
-    }
-
-    private OrderDetail toDetailEntity(OderDetailRequest request) {
-        if (request == null) return null;
-        return OrderDetail.builder()
-                .detailId(request.getDetailId())
-                .orderId(request.getOrderId())
-                .productId(request.getProductId())
-                .quantity(request.getQuantity())
-                .price(request.getPrice())
                 .build();
     }
 

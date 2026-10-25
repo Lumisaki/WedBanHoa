@@ -3,6 +3,7 @@ package org.example.wedbanhoa.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -18,6 +19,10 @@ public class Order {
 
     @Column(name = "user_id")
     private Integer userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private Account user;
 
     @Column(name = "total_price")
     private Double totalPrice;
@@ -75,4 +80,7 @@ public class Order {
 
     @Column(name = "payment_method", columnDefinition = "NVARCHAR(100)")
     private String paymentMethod;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderDetail> orderDetails;
 }

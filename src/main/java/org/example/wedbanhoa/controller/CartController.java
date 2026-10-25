@@ -24,6 +24,9 @@ public class CartController extends BaseController {
     @Autowired
     private CouponService couponService;
 
+    @Autowired
+    private org.example.wedbanhoa.service.BankSettingService bankSettingService;
+
     @GetMapping("/cart")
     public String viewCart(Model model, HttpSession session) {
         setHeaderData(model, session);
@@ -118,7 +121,6 @@ public class CartController extends BaseController {
     public String checkoutPage(Model model, HttpSession session) {
         Account user = (Account) session.getAttribute("userSession");
         if (user == null) {
-            session.setAttribute("errorMsg", "Vui lòng đăng nhập để tiến hành thanh toán!");
             return "redirect:/Login";
         }
 
@@ -226,6 +228,10 @@ public class CartController extends BaseController {
         double vat = (subTotal - discountAmount) * 0.08;
         double grandTotal = Math.max(0, subTotal - discountAmount + vat);
 
+        boolean isBankTransfer = "BankTransfer".equalsIgnoreCase(finalPaymentMethod) || "Bank Transfer".equalsIgnoreCase(finalPaymentMethod) || "Online".equalsIgnoreCase(finalPaymentMethod);
+        String initialStatus = isBankTransfer ? "Waiting Payment" : "Pending";
+        String normalizedPaymentMethod = isBankTransfer ? "Bank Transfer" : "COD";
+
         OderRequest orderRequest = OderRequest.builder()
                 .userId(user.getUserId())
                 .senderName(sName)
@@ -240,7 +246,7 @@ public class CartController extends BaseController {
                 .deliveryTime(delivTime)
                 .cardMessage(cardMsg)
                 .specialRequests(specialReq)
-                .paymentMethod(finalPaymentMethod)
+                .paymentMethod(normalizedPaymentMethod)
                 .couponCode(couponCode)
                 .discountAmount(discountAmount)
                 .vatAmount(vat)
@@ -248,10 +254,30 @@ public class CartController extends BaseController {
                 .build();
 
         OderResponse saved = orderService.placeOrderFromRequest(orderRequest, cart);
-        orderService.confirmPaymentAndDeductStock(saved.getOrderId(), finalPaymentMethod, "Pending");
+        orderService.confirmPaymentAndDeductStock(saved.getOrderId(), normalizedPaymentMethod, initialStatus);
 
         session.removeAttribute("cart");
-        session.setAttribute("successMsg", "Đặt hàng thành công! Mã đơn của bạn là #" + saved.getOrderId());
-        return "redirect:/index";
+
+        if (isBankTransfer) {
+            session.setAttribute("successMsg", "Đơn hàng #" + saved.getOrderId() + " đã được tạo! Vui lòng hoàn tất chuyển khoản theo hướng dẫn bên dưới.");
+            return "redirect:/PaymentTransfer?orderId=" + saved.getOrderId();
+        } else {
+            session.setAttribute("successMsg", "Đặt hàng thành công với hình thức Thanh toán khi nhận hàng (COD)! Mã đơn #" + saved.getOrderId());
+            return "redirect:/OrderDetail?orderId=" + saved.getOrderId();
+        }
+    }
+
+    @GetMapping({"/PaymentTransfer", "/payment"})
+    public String paymentTransferPage(@RequestParam("orderId") Integer orderId, Model model, HttpSession session) {
+        Account user = (Account) session.getAttribute("userSession");
+        if (user == null) return "redirect:/Login";
+        setHeaderData(model, session);
+
+        OderResponse order = orderService.getOrderById(orderId);
+        if (order == null) return "redirect:/index";
+
+        model.addAttribute("order", order);
+        model.addAttribute("bankSetting", bankSettingService.getBankSetting());
+        return "view/payment";
     }
 }

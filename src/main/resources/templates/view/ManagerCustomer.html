@@ -2,18 +2,124 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Quản Lý Khách Hàng | Admin Dashboard</title>
+    <title>Quản Lý Khách Hàng & Phân Quyền | Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .role-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+        .role-admin {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+        .role-manager {
+            background: #ede9fe;
+            color: #7c3aed;
+            border: 1px solid #c4b5fd;
+        }
+        .role-employee {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+        .role-customer {
+            background: #e0f2fe;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+        }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-edit { background: #fef3c7; color: #d97706; }
+        .btn-edit:hover { background: #fde68a; }
+        .btn-delete { background: #fee2e2; color: #dc2626; }
+        .btn-delete:hover { background: #fecaca; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            padding: 18px 24px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h4 { margin: 0; font-size: 16px; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+        .modal-body { padding: 20px 24px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #d63384;
+            box-shadow: 0 0 0 3px rgba(214, 51, 132, 0.15);
+        }
+        .modal-footer {
+            padding: 14px 24px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
+
+    <div th:replace="~{view/admin_sidebar :: sidebar('customer')}"></div>
 
     <div class="main-content">
         <div class="header-top">
             <h1>Trang Quản Trị Hệ Thống</h1>
             <div class="admin-profile">
                 Chào, <span><span th:text="${session.userSession != null ? session.userSession.email : ''}"></span></span>
-                <span class="admin-badge">ADMIN</span>
+                <span class="admin-badge" th:text="${session.userSession != null and session.userSession.roleId == 1 ? 'ADMIN' : (session.userSession != null and session.userSession.roleId == 3 ? 'MANAGER' : 'STAFF')}">ADMIN</span>
             </div>
         </div>
 
@@ -21,21 +127,27 @@
             <div id="content-main">
                 <div class="table-card">
                     <div class="table-header">
-                        <h3><i class="fas fa-user-friends" style="color: #d63384; margin-right: 8px;"></i> Danh Sách Khách Hàng</h3>
+                        <h3><i class="fas fa-users-cog" style="color: #d63384; margin-right: 8px;"></i> Quản Lý Tài Khoản & Phân Quyền</h3>
+                        <th:block th:if="${session.userSession != null and session.userSession.roleId == 1}">
+                            <button type="button" class="btn-add" onclick="openAddModal()">
+                                <i class="fas fa-user-plus"></i> Thêm Nhân Sự Mới
+                            </button>
+                        </th:block>
                     </div>
                     
                     <th:block th:if="${listC != null && !listC.empty}">
                         <div class="admin-search-wrapper">
                             <div class="admin-search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                                <input type="text" placeholder="Tìm kiếm tài khoản..." onkeyup="filterAdminTable(this)">
                             </div>
                         </div>
                         <table>
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Thông tin khách hàng</th>
+                                    <th>Thông tin tài khoản</th>
+                                    <th>Vai trò</th>
                                     <th>Số điện thoại</th>
                                     <th>Địa chỉ</th>
                                     <th style="text-align: center;">Hành động</th>
@@ -55,6 +167,12 @@
                                             </div>
                                         </td>
                                         <td>
+                                            <span th:if="${c.roleId == 1}" class="role-badge role-admin"><i class="fas fa-shield-alt"></i> Quản trị (Admin)</span>
+                                            <span th:if="${c.roleId == 3}" class="role-badge role-manager"><i class="fas fa-user-tie"></i> Quản lý (Manager)</span>
+                                            <span th:if="${c.roleId == 4}" class="role-badge role-employee"><i class="fas fa-id-badge"></i> Nhân viên (Employee)</span>
+                                            <span th:if="${c.roleId == 2 or (c.roleId != 1 and c.roleId != 3 and c.roleId != 4)}" class="role-badge role-customer"><i class="fas fa-user"></i> Khách hàng</span>
+                                        </td>
+                                        <td>
                                             <span th:if="${c.phone != null && !c.phone.empty}" th:text="${c.phone}"></span>
                                             <span th:unless="${c.phone != null && !c.phone.empty}" style="color:#cbd5e1; font-style: italic;">Chưa cập nhật</span>
                                         </td>
@@ -63,25 +181,40 @@
                                             <span th:unless="${c.address != null && !c.address.empty}" style="color:#cbd5e1; font-style: italic;">Chưa cập nhật</span>
                                         </td>
                                         <td style="text-align: center;">
-                                            <a th:href="@{/CustomerDetail(id=${c.userId}, tab='info')}" class="btn-view" style="background:#e0f2fe; color:#0284c7;"><i class="fas fa-info-circle"></i> Hồ sơ</a>
-                                            <a th:href="@{/CustomerDetail(id=${c.userId}, tab='history')}" class="btn-view" style="background:#fce7f3; color:#db2777;"><i class="fas fa-shopping-cart"></i> Lịch sử mua</a>
+                                            <a th:href="@{/CustomerDetail(id=${c.userId}, tab='info')}" class="btn-action" style="background:#e0f2fe; color:#0284c7;" title="Hồ sơ chi tiết">
+                                                <i class="fas fa-id-card"></i> Chi tiết
+                                            </a>
+                                            <th:block th:if="${session.userSession != null and session.userSession.roleId == 1}">
+                                                <button type="button" class="btn-action btn-edit" 
+                                                        th:data-id="${c.userId}"
+                                                        th:data-fullname="${c.fullname}"
+                                                        th:data-email="${c.email}"
+                                                        th:data-phone="${c.phone}"
+                                                        th:data-address="${c.address}"
+                                                        th:data-role="${c.roleId}"
+                                                        onclick="openEditModal(this)">
+                                                    <i class="fas fa-user-edit"></i> Sửa
+                                                </button>
+                                                <button th:if="${c.roleId != 1}" type="button" class="btn-action btn-delete" 
+                                                        th:data-id="${c.userId}"
+                                                        th:data-name="${c.fullname}"
+                                                        onclick="confirmDelete(this)">
+                                                    <i class="fas fa-trash-alt"></i> Xóa
+                                                </button>
+                                                <span th:if="${c.roleId == 1}" class="btn-action" style="background:#f1f5f9; color:#94a3b8; cursor:not-allowed;" title="Admin tối cao không thể xóa">
+                                                    <i class="fas fa-lock"></i> Khóa
+                                                </span>
+                                            </th:block>
                                         </td>
                                     </tr>
                                 </th:block>
                             </tbody>
                         </table>
-                        <div th:if="${totalPages != null && totalPages > 1}" class="pagination-wrapper">
-                            <a th:href="@{${pageUrlPattern} + ${currentPage - 1}}" th:classappend="${currentPage == 1 ? 'disabled' : ''}" class="pagination-btn"><i class="fas fa-chevron-left"></i> Lùi</a>
-                            <th:block th:each="pNum : ${#numbers.sequence(1, totalPages)}">
-                                <a th:href="@{${pageUrlPattern} + ${pNum}}" th:classappend="${currentPage == pNum ? 'active' : ''}" th:text="${pNum}" class="pagination-btn"></a>
-                            </th:block>
-                            <a th:href="@{${pageUrlPattern} + ${currentPage + 1}}" th:classappend="${currentPage == totalPages ? 'disabled' : ''}" class="pagination-btn">Tiến <i class="fas fa-chevron-right"></i></a>
-                        </div>
                     </th:block>
                     
                     <div th:unless="${listC != null && !listC.empty}" style="text-align: center; padding: 50px; color: #94a3b8;">
                         <i class="fas fa-users-slash" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
-                        Chưa có khách hàng nào đăng ký hệ thống!
+                        Chưa có người dùng nào đăng ký trên hệ thống!
                     </div>
                 </div>
             </div>
@@ -90,6 +223,182 @@
         </div>
     </div>
 
+    <!-- MODAL THÊM TÀI KHOẢN (CHỈ DÀNH CHO ADMIN, CHỈ CHỌN MANAGER HOẶC EMPLOYEE) -->
+    <div id="addModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4><i class="fas fa-user-plus" style="color: #d63384;"></i> Thêm Tài Khoản Quản Lý / Nhân Viên</h4>
+                <button type="button" onclick="closeAddModal()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#94a3b8;"><i class="fas fa-times"></i></button>
+            </div>
+            <form th:action="@{/Admin/AddCustomer}" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Họ và tên *</label>
+                        <input type="text" name="fullname" required placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="form-group">
+                        <label>Email đăng nhập *</label>
+                        <input type="email" name="email" required placeholder="staff@gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Mật khẩu khởi tạo *</label>
+                        <input type="password" name="password" required placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="text" name="phone" placeholder="0987654321">
+                    </div>
+                    <div class="form-group">
+                        <label>Địa chỉ</label>
+                        <input type="text" name="address" placeholder="Hà Nội, Việt Nam">
+                    </div>
+                    <div class="form-group">
+                        <label>Phân quyền vai trò *</label>
+                        <select name="roleId" required>
+                            <option value="4" selected>Nhân viên (Employee)</option>
+                            <option value="3">Quản lý (Manager)</option>
+                        </select>
+                        <small style="color: #64748b; font-size: 11px;">* Hệ thống quy định chỉ có 1 tài khoản Admin duy nhất. Chỉ được tạo thêm Quản lý hoặc Nhân viên.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeAddModal()" class="btn-action" style="background:#e2e8f0; color:#475569;">Hủy bỏ</button>
+                    <button type="submit" class="btn-action" style="background:#d63384; color:white;"><i class="fas fa-check"></i> Lưu tài khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA TÀI KHOẢN & PHÂN QUYỀN -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4><i class="fas fa-user-edit" style="color: #f59e0b;"></i> Sửa Thông Tin & Quyền Tài Khoản</h4>
+                <button type="button" onclick="closeEditModal()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#94a3b8;"><i class="fas fa-times"></i></button>
+            </div>
+            <form th:action="@{/Admin/UpdateCustomer}" method="post">
+                <input type="hidden" id="editUserId" name="userId">
+                <input type="hidden" id="editHiddenRoleId" name="roleId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Email (Không thể thay đổi)</label>
+                        <input type="text" id="editEmail" disabled style="background:#f1f5f9; color:#64748b;">
+                    </div>
+                    <div class="form-group">
+                        <label>Họ và tên *</label>
+                        <input type="text" id="editFullname" name="fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="text" id="editPhone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Địa chỉ</label>
+                        <input type="text" id="editAddress" name="address">
+                    </div>
+                    <div class="form-group">
+                        <label>Phân quyền vai trò *</label>
+                        <select id="editRoleIdSelect" onchange="document.getElementById('editHiddenRoleId').value = this.value;" required>
+                            <option value="4">Nhân viên (Employee)</option>
+                            <option value="3">Quản lý (Manager)</option>
+                            <option value="2">Khách hàng thông thường (Customer)</option>
+                            <option value="1" id="adminOption" style="display: none;">Quản trị viên (Admin - Duy nhất)</option>
+                        </select>
+                        <small id="adminNotice" style="color:#dc2626; font-size:11px; display:none;">* Tài khoản Admin tối cao duy nhất của hệ thống (không thể đổi quyền).</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Đổi mật khẩu mới (Bỏ trống nếu giữ nguyên)</label>
+                        <input type="password" name="password" placeholder="Nhập mật khẩu mới nếu muốn đổi">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeEditModal()" class="btn-action" style="background:#e2e8f0; color:#475569;">Đóng</button>
+                    <button type="submit" class="btn-action" style="background:#10b981; color:white;"><i class="fas fa-save"></i> Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORM XÓA ẨN -->
+    <form id="deleteForm" th:action="@{/Admin/DeleteCustomer}" method="post" style="display:none;">
+        <input type="hidden" name="userId" id="deleteUserId">
+    </form>
+
+    <script th:inline="javascript">
+        window.addEventListener('DOMContentLoaded', function () {
+            /*[# th:if="${msgSuccess != null}"]*/
+            Swal.fire({icon: 'success', title: 'Thành công!', text: /*[[${msgSuccess}]]*/ '', confirmButtonColor: '#10b981'});
+            /*[/]*/
+            /*[# th:if="${msgError != null}"]*/
+            Swal.fire({icon: 'error', title: 'Thông báo', text: /*[[${msgError}]]*/ '', confirmButtonColor: '#ef4444'});
+            /*[/]*/
+        });
+
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'flex';
+        }
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+
+        function openEditModal(btn) {
+            var userId = btn.getAttribute('data-id');
+            var email = btn.getAttribute('data-email');
+            var fullname = btn.getAttribute('data-fullname');
+            var phone = btn.getAttribute('data-phone') || '';
+            var address = btn.getAttribute('data-address') || '';
+            var roleId = btn.getAttribute('data-role') || '2';
+
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editFullname').value = fullname;
+            document.getElementById('editPhone').value = phone;
+            document.getElementById('editAddress').value = address;
+
+            var adminOpt = document.getElementById('adminOption');
+            var roleSelect = document.getElementById('editRoleIdSelect');
+            var adminNotice = document.getElementById('adminNotice');
+            var hiddenRole = document.getElementById('editHiddenRoleId');
+
+            if (roleId === '1') {
+                adminOpt.style.display = 'block';
+                roleSelect.value = '1';
+                roleSelect.disabled = true;
+                adminNotice.style.display = 'block';
+                hiddenRole.value = '1';
+            } else {
+                adminOpt.style.display = 'none';
+                roleSelect.disabled = false;
+                roleSelect.value = roleId;
+                adminNotice.style.display = 'none';
+                hiddenRole.value = roleId;
+            }
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function confirmDelete(btn) {
+            var userId = btn.getAttribute('data-id');
+            var name = btn.getAttribute('data-name');
+            Swal.fire({
+                title: 'Xác nhận xóa tài khoản?',
+                text: 'Bạn có chắc chắn muốn xóa tài khoản ' + name + ' (#ID: ' + userId + ')?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteUserId').value = userId;
+                    document.getElementById('deleteForm').submit();
+                }
+            });
+        }
+    </script>
     <script th:src="@{/js/admin-search.js}"></script>
 </body>
 </html>

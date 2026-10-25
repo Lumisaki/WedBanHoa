@@ -4,7 +4,6 @@ import org.example.wedbanhoa.dto.AccountRequest;
 import org.example.wedbanhoa.dto.AccountResponse;
 import org.example.wedbanhoa.entity.Account;
 import org.example.wedbanhoa.repository.AccountRepository;
-import org.example.wedbanhoa.utils.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,66 +19,41 @@ public class AccountService {
 
     @Transactional
     public boolean register(AccountRequest request) {
-        if (accountRepository.existsByEmail(request.getEmail())) {
+        if (request == null || request.getEmail() == null || accountRepository.existsByEmailIgnoreCase(request.getEmail().trim())) {
             return false;
         }
-        Account account = toEntity(request); // Gọi hàm mapping trực tiếp ở đây
+        Account account = toEntity(request);
         if (account.getRoleId() == null) {
             account.setRoleId(2); // Mặc định role USER/Customer
         }
-        if (account.getPassword() != null && !account.getPassword().isEmpty()) {
-            account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt()));
-        }
-        if (account.getSecurityAnswer() != null && !account.getSecurityAnswer().isEmpty()) {
-            account.setSecurityAnswer(BCrypt.hashpw(account.getSecurityAnswer(), BCrypt.gensalt()));
-        }
         accountRepository.save(account);
         return true;
     }
 
     @Transactional
-    public boolean register(Account account) {
-        if (accountRepository.existsByEmail(account.getEmail())) {
-            return false;
-        }
-        if (account.getRoleId() == null) {
-            account.setRoleId(2);
-        }
-        if (account.getPassword() != null) {
-            account.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt()));
-        }
-        if (account.getSecurityAnswer() != null) {
-            account.setSecurityAnswer(BCrypt.hashpw(account.getSecurityAnswer(), BCrypt.gensalt()));
-        }
-        accountRepository.save(account);
-        return true;
-    }
+    public Account loginEntity(String identifier, String password) {
+        if (identifier == null || password == null) return null;
+        String cleanInput = identifier.trim();
+        String cleanPass = password.trim();
 
-    @Transactional
-    public Account loginEntity(String email, String password) {
-        Optional<Account> accOpt = accountRepository.findByEmail(email);
-        if (accOpt.isPresent()) {
-            Account acc = accOpt.get();
-            String storedHash = acc.getPassword();
-            boolean matches = false;
+        List<Account> accounts = accountRepository.findByEmailOrPhone(cleanInput);
+        if (accounts.isEmpty()) {
+            accountRepository.findByEmailIgnoreCase(cleanInput).ifPresent(accounts::add);
+        }
 
-            if (storedHash != null) {
-                if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$")) {
-                    try {
-                        matches = BCrypt.checkpw(password, storedHash);
-                    } catch (Exception e) {
-                        matches = false;
-                    }
-                } else {
-                    matches = storedHash.equals(password);
-                    if (matches) {
-                        acc.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
-                        accountRepository.save(acc);
-                    }
-                }
+        for (Account acc : accounts) {
+            String storedPass = acc.getPassword() != null ? acc.getPassword().trim() : "";
+
+            // 1. So khớp mật khẩu thuần túy (Plain text)
+            if (storedPass.equals(cleanPass)) {
+                return acc;
             }
 
-            if (matches) {
+            // 2. Tương thích ngược: Nếu mật khẩu trong DB là chuỗi băm cũ ($2a$, $2b$, $2y$)
+            // Chuyển đổi tự động về Plain Text theo mật khẩu người dùng vừa nhập
+            if (storedPass.startsWith("$2a$") || storedPass.startsWith("$2b$") || storedPass.startsWith("$2y$")) {
+                acc.setPassword(cleanPass);
+                accountRepository.save(acc);
                 return acc;
             }
         }
@@ -89,31 +63,18 @@ public class AccountService {
     @Transactional
     public AccountResponse login(String email, String password) {
         Account acc = loginEntity(email, password);
-        return acc != null ? toResponse(acc) : null; // Gọi hàm mapping trực tiếp
+        return acc != null ? toResponse(acc) : null;
     }
 
     @Transactional
     public boolean resetPassword(String email, String answer, String newPassword) {
-        Optional<Account> accOpt = accountRepository.findByEmail(email);
+        if (email == null || answer == null || newPassword == null) return false;
+        Optional<Account> accOpt = accountRepository.findByEmailIgnoreCase(email.trim());
         if (accOpt.isPresent()) {
             Account acc = accOpt.get();
-            String storedAnswerHash = acc.getSecurityAnswer();
-            boolean answerMatches = false;
-
-            if (storedAnswerHash != null) {
-                if (storedAnswerHash.startsWith("$2a$") || storedAnswerHash.startsWith("$2b$") || storedAnswerHash.startsWith("$2y$")) {
-                    try {
-                        answerMatches = BCrypt.checkpw(answer, storedAnswerHash);
-                    } catch (Exception e) {
-                        answerMatches = false;
-                    }
-                } else {
-                    answerMatches = storedAnswerHash.equalsIgnoreCase(answer);
-                }
-            }
-
-            if (answerMatches) {
-                acc.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            String storedAnswer = acc.getSecurityAnswer();
+            if (storedAnswer != null && storedAnswer.trim().equalsIgnoreCase(answer.trim())) {
+                acc.setPassword(newPassword.trim());
                 accountRepository.save(acc);
                 return true;
             }
@@ -123,43 +84,123 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public AccountResponse getById(Integer id) {
+        if (id == null) return null;
         return accountRepository.findById(id)
-                .map(this::toResponse) // Gọi hàm mapping trực tiếp qua method reference
+                .map(this::toResponse)
                 .orElse(null);
     }
 
     @Transactional(readOnly = true)
     public Account getEntityById(Integer id) {
+        if (id == null) return null;
         return accountRepository.findById(id).orElse(null);
     }
 
     @Transactional(readOnly = true)
     public List<AccountResponse> getAllCustomers() {
         return accountRepository.findByRoleIdOrderByUserIdDesc(2).stream()
-                .map(this::toResponse) // Dùng Stream API kết hợp hàm mapping nội bộ
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AccountResponse> getAllAccounts() {
+        return accountRepository.findAllByOrderByUserIdDesc().stream()
+                .map(this::toResponse)
                 .toList();
     }
 
     @Transactional
-    public AccountResponse updateProfile(AccountRequest request) {
-        Account acc = accountRepository.findById(request.getUserId()).orElse(null);
+    public boolean createAccountByAdmin(AccountRequest request) {
+        if (request == null || request.getEmail() == null || accountRepository.existsByEmailIgnoreCase(request.getEmail().trim())) {
+            return false;
+        }
+        // Tuyệt đối chỉ có 1 tài khoản Admin duy nhất trong hệ thống! Không cho phép tạo thêm Admin.
+        if (request.getRoleId() != null && request.getRoleId() == 1) {
+            return false;
+        }
+        Account account = toEntity(request);
+        // Chỉ chấp nhận Manager (3) hoặc Employee (4) khi thêm từ trang quản trị
+        if (account.getRoleId() == null || (account.getRoleId() != 3 && account.getRoleId() != 4)) {
+            account.setRoleId(4); // Mặc định Nhân viên (Employee)
+        }
+        if (account.getPassword() == null || account.getPassword().trim().isEmpty()) {
+            account.setPassword("123456");
+        }
+        accountRepository.save(account);
+        return true;
+    }
+
+    @Transactional
+    public boolean updateAccountByAdmin(Integer userId, String fullname, String phone, String address, Integer roleId, String newPassword) {
+        Account acc = accountRepository.findById(userId).orElse(null);
         if (acc != null) {
-            acc.setFullname(request.getFullname());
-            acc.setPhone(request.getPhone());
-            acc.setAddress(request.getAddress());
-            Account saved = accountRepository.save(acc);
-            return toResponse(saved); // Gọi hàm mapping trực tiếp
+            // Không được phép nâng quyền của tài khoản khác lên Admin (roleId = 1)
+            if (acc.getRoleId() != null && acc.getRoleId() == 1) {
+                // Đang sửa chính Admin gốc: bảo lưu quyền Admin không cho hạ quyền
+                roleId = 1;
+            } else if (roleId != null && roleId == 1) {
+                // Không cho nâng ai lên Admin
+                return false;
+            }
+
+            if (fullname != null && !fullname.trim().isEmpty()) acc.setFullname(fullname.trim());
+            acc.setPhone(phone);
+            acc.setAddress(address);
+            if (roleId != null) acc.setRoleId(roleId);
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                acc.setPassword(newPassword.trim());
+            }
+            accountRepository.save(acc);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public boolean changePassword(Integer userId, String oldPass, String newPass) {
+        if (userId == null || oldPass == null || newPass == null) return false;
+        Account acc = accountRepository.findById(userId).orElse(null);
+        if (acc == null || acc.getPassword() == null) return false;
+        String storedPass = acc.getPassword().trim();
+        if (!storedPass.equals(oldPass.trim()) && !storedPass.startsWith("$2")) {
+            return false;
+        }
+        acc.setPassword(newPass.trim());
+        accountRepository.save(acc);
+        return true;
+    }
+
+    @Transactional
+    public boolean deleteAccount(Integer userId) {
+        if (userId != null && accountRepository.existsById(userId)) {
+            Account acc = accountRepository.findById(userId).orElse(null);
+            if (acc != null && acc.getRoleId() != null && acc.getRoleId() == 1) {
+                return false;
+            }
+            accountRepository.deleteById(userId);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public AccountResponse updateProfile(AccountRequest req) {
+        if (req == null || req.getUserId() == null) return null;
+        Optional<Account> accOpt = accountRepository.findById(req.getUserId());
+        if (accOpt.isPresent()) {
+            Account account = accOpt.get();
+            if (req.getFullname() != null) account.setFullname(req.getFullname().trim());
+            if (req.getPhone() != null) account.setPhone(req.getPhone().trim());
+            if (req.getAddress() != null) account.setAddress(req.getAddress().trim());
+            Account saved = accountRepository.save(account);
+            return toResponse(saved);
         }
         return null;
     }
 
-    @Transactional
-    public Account updateProfile(Account account) {
-        return accountRepository.save(account);
-    }
-
     // =========================================================================
-    // CÁC HÀM MAPPING ĐƯỢC CHUYỂN VÀO ĐÂY (ĐÃ BỎ @Autowired AccountMapper)
+    // CÁC HÀM MAPPING NỘI BỘ (DTO <-> ENTITY)
     // =========================================================================
 
     private Account toEntity(AccountRequest request) {
@@ -186,21 +227,9 @@ public class AccountService {
                 .phone(entity.getPhone())
                 .address(entity.getAddress())
                 .securityQuestion(entity.getSecurityQuestion())
+                .securityAnswer(entity.getSecurityAnswer())
                 .roleId(entity.getRoleId())
                 .roleName(entity.getRoleId() != null && entity.getRoleId() == 1 ? "Admin" : "Customer")
-                .build();
-    }
-
-    private AccountRequest toRequest(Account entity) {
-        if (entity == null) return null;
-        return AccountRequest.builder()
-                .userId(entity.getUserId())
-                .fullname(entity.getFullname())
-                .email(entity.getEmail())
-                .phone(entity.getPhone())
-                .address(entity.getAddress())
-                .securityQuestion(entity.getSecurityQuestion())
-                .roleId(entity.getRoleId())
                 .build();
     }
 }

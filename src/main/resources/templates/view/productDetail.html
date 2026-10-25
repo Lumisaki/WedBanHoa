@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title th:text="${(p != null ? p.pname : 'Chi tiết sản phẩm') + ' | Tiệm Ba Hoa'}">Tiệm Ba Hoa</title>
+        <title th:text="${(p != null ? p.pname : 'Chi tiết sản phẩm') + ' | Tiệm Năm Hoa'}">Tiệm Năm Hoa</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
     </head>
@@ -34,7 +34,7 @@
 
                     <div class="detail-btn-group">
                         <th:block th:if="${p.stock != null && p.stock > 0}">
-                            <a th:href="@{/AddToCart(pid=${p.id},action='buynow')}" class="detail-btn detail-btn-buy">
+                            <a th:href="@{/AddToCart(pid=${p.id},action='buynow')}" class="detail-btn detail-btn-buy" onclick="return handleBuyNowClick(event)">
                                 <i class="fas fa-bolt"></i> ĐẶT HOA MUA NGAY
                             </a>
                             <form th:action="@{/AddToCart}" method="post" style="margin: 0;">
@@ -96,6 +96,18 @@
                     <div th:if="${reviews == null || reviews.isEmpty()}">
                         <p style="color: #94a3b8; font-style: italic;">Chưa có đánh giá nào. Hãy là người đầu tiên review bó hoa này!</p>
                     </div>
+                    <div th:unless="${reviews == null || reviews.isEmpty()}">
+                        <div th:each="r : ${reviews}" style="border-bottom: 1px solid #f1f5f9; padding: 15px 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <strong style="color: #1e293b;" th:text="${r.fullname}">Tên khách</strong>
+                                <span style="font-size: 12px; color: #94a3b8;" th:text="${r.review_date}">Thời gian</span>
+                            </div>
+                            <div style="color: #f59e0b; margin-bottom: 5px;">
+                                <span th:each="star : ${#numbers.sequence(1, r.rating)}">⭐</span>
+                            </div>
+                            <p style="color: #475569; margin: 0; font-size: 14px; line-height: 1.5;" th:text="${r.comment}">Nội dung đánh giá</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -126,6 +138,34 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script th:inline="javascript">
+            let isBuyNowAlertShowing = false;
+            function handleBuyNowClick(e) {
+                /*[# th:if="${session.userSession == null}"]*/
+                e.preventDefault();
+                if (isBuyNowAlertShowing) return false;
+                isBuyNowAlertShowing = true;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Yêu cầu đăng nhập',
+                    text: 'Vui lòng đăng nhập tài khoản để đặt hoa mua ngay!',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d63384',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Đăng nhập ngay',
+                    cancelButtonText: 'Tiếp tục xem',
+                    didClose: () => { isBuyNowAlertShowing = false; }
+                }).then((result) => {
+                    isBuyNowAlertShowing = false;
+                    if (result.isConfirmed) {
+                        window.location.href = /*[[@{/Login}]]*/ '/Login';
+                    }
+                });
+                return false;
+                /*[/]*/
+                return true;
+            }
+        </script>
         <div th:replace="~{view/footer :: body}"></div> 
     </body>
 </html>

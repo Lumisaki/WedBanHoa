@@ -5,27 +5,10 @@
     <title>Đánh Giá Sản Phẩm | Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="brand">
-            <h2>TIỆM BA HOA</h2>
-            <p>MANAGEMENT</p>
-        </div>
-        <ul class="nav-menu">
-            <li id="menu-main" class="active"><a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a></li>
-            <li><a th:href="@{/ManagerProduct}"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a></li>
-            <li><a th:href="@{/ManagerCustomer}"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
-            <li><a th:href="@{/ManageOrder}"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a></li>
-            <li id="menu-chat"><a href="#" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Hộp thư hỗ trợ <span id="admin-chat-badge">Mới</span></a></li>
-        </ul>
-        <div class="nav-bottom">
-            <ul class="nav-menu" style="padding: 0;">
-                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
-                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
-            </ul>
-        </div>
-    </div>
+    <div th:replace="~{view/admin_sidebar :: sidebar('product')}"></div>
 
     <div class="main-content">
         <div class="header-top">
@@ -50,14 +33,14 @@
 
                 <div class="table-card" style="margin-top: 0;">
                     <div class="table-header">
-                        <h3><i class="fas fa-comments" style="color: #d63384; margin-right: 8px;"></i> Lịch sử phản hồi từ Khách Hàng</h3>
+                        <h3><i class="fas fa-comments" style="color: #d63384; margin-right: 8px;"></i> Lịch Sử Phản Hồi Từ Khách Hàng</h3>
                     </div>
                     
                     <th:block th:if="${listReviews != null && !listReviews.empty}">
                         <div class="admin-search-wrapper">
                             <div class="admin-search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="filterAdminTable(this)">
+                                <input type="text" placeholder="Tìm kiếm đánh giá..." onkeyup="filterAdminTable(this)">
                             </div>
                         </div>
                         <table style="width: 100%;">
@@ -67,6 +50,7 @@
                                     <th>Số sao</th>
                                     <th>Nội dung bình luận</th>
                                     <th>Thời gian đánh giá</th>
+                                    <th style="text-align: center;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -83,6 +67,15 @@
                                         </td>
                                         <td style="color: #4a5568; font-style: italic;">"<span th:text="${r.comment}"></span>"</td>
                                         <td style="color: #64748b; font-size: 13px;" th:text="${r.review_date}"></td>
+                                        <td style="text-align: center;">
+                                            <form th:action="@{/Admin/DeleteReview}" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này không?');">
+                                                <input type="hidden" name="reviewId" th:value="${r.reviewId}">
+                                                <input type="hidden" name="pid" th:value="${productDetail.id}">
+                                                <button type="submit" style="background:#fee2e2; color:#dc2626; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;">
+                                                    <i class="fas fa-trash-alt"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                 </th:block>
                             </tbody>
@@ -100,6 +93,16 @@
         </div>
     </div>
 
+    <script th:inline="javascript">
+        window.addEventListener('DOMContentLoaded', function () {
+            /*[# th:if="${msgSuccess != null}"]*/
+            Swal.fire({icon: 'success', title: 'Thành công!', text: /*[[${msgSuccess}]]*/ '', confirmButtonColor: '#10b981'});
+            /*[/]*/
+            /*[# th:if="${msgError != null}"]*/
+            Swal.fire({icon: 'error', title: 'Thông báo', text: /*[[${msgError}]]*/ '', confirmButtonColor: '#ef4444'});
+            /*[/]*/
+        });
+    </script>
     <script th:src="@{/js/admin-search.js}"></script>
 </body>
 </html>

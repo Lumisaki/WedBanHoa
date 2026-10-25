@@ -38,16 +38,35 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
+
         List<Product> list = productRepository.findAll(Sort.by(Sort.Direction.DESC, "productId"));
-        populateSold(list);
         return list.stream().map(this::enrichProductResponse).toList();
     }
-
     @Transactional(readOnly = true)
     public List<ProductResponse> getHomeDiscountedProducts() {
         List<Product> list = productRepository.findByDiscountGreaterThan(0);
         populateSold(list);
         return list.stream().map(this::enrichProductResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getLowStockProducts(int threshold) {
+        List<Product> list = productRepository.findAll().stream()
+                .filter(p -> p.getStock() != null && p.getStock() <= threshold)
+                .toList();
+        populateSold(list);
+        return list.stream().map(this::enrichProductResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getBestSellerProducts(int limit) {
+        List<Product> list = productRepository.findAll();
+        populateSold(list);
+        return list.stream()
+                .sorted((a, b) -> Integer.compare(b.getSold() != null ? b.getSold() : 0, a.getSold() != null ? a.getSold() : 0))
+                .limit(limit)
+                .map(this::enrichProductResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -173,15 +192,30 @@ public class ProductService {
     }
 
     private void populateSold(List<Product> products) {
-        for (Product p : products) {
-            Integer sold = orderDetailRepository.getSoldQuantityByProductId(p.getProductId());
-            p.setSold(sold != null ? sold : 0);
+        if (products == null || products.isEmpty()) return;
+        try {
+            List<Object[]> soldList = orderDetailRepository.getAllSoldQuantities();
+            Map<Integer, Integer> soldMap = new HashMap<>();
+            for (Object[] row : soldList) {
+                if (row[0] != null && row[1] != null) {
+                    soldMap.put(((Number) row[0]).intValue(), ((Number) row[1]).intValue());
+                }
+            }
+            for (Product p : products) {
+                p.setSold(soldMap.getOrDefault(p.getProductId(), 0));
+            }
+        } catch (Exception e) {
+            for (Product p : products) {
+                if (p.getSold() == null) p.setSold(0);
+            }
         }
     }
 
     private ProductResponse enrichProductResponse(Product p) {
         String catName = "";
-        if (p.getCategoryId() != null) {
+        if (p.getCategory() != null) {
+            catName = p.getCategory().getCategoryName();
+        } else if (p.getCategoryId() != null) {
             catName = categoryRepository.findById(p.getCategoryId())
                     .map(Category::getCategoryName)
                     .orElse("");
@@ -203,9 +237,6 @@ public class ProductService {
         return fileName;
     }
 
-    // =========================================================================
-    // CÁC HÀM MAPPING ĐƯỢC CHUYỂN TRỰC TIẾP VÀO ĐÂY
-    // =========================================================================
 
     private Product toEntity(ProductRequest request) {
         if (request == null) return null;

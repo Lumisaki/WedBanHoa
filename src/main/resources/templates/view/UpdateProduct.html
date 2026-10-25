@@ -7,25 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="brand">
-            <h2>TIỆM BA HOA</h2>
-            <p>MANAGEMENT</p>
-        </div>
-        <ul class="nav-menu">
-            <li><a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a></li>
-            <li id="menu-main" class="active"><a href="#" onclick="switchTab('main')"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a></li>
-            <li><a th:href="@{/ManagerCustomer}"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
-            <li><a th:href="@{/ManageOrder}"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a></li>
-            <li id="menu-chat"><a href="#" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Hộp thư hỗ trợ <span id="admin-chat-badge">Mới</span></a></li>
-        </ul>
-        <div class="nav-bottom">
-            <ul class="nav-menu" style="padding: 0;">
-                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
-                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
-            </ul>
-        </div>
-    </div>
+    <div th:replace="~{view/admin_sidebar :: sidebar('product')}"></div>
 
     <div class="main-content">
         <div class="header-top">

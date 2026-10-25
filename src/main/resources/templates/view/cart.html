@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Giỏ Hàng Của Bạn | Tiệm Ba Hoa</title>
+    <title>Giỏ Hàng Của Bạn | Tiệm Năm Hoa</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/index.css?v=2.0}" href="/css/index.css?v=2.0">
 </head>
@@ -67,13 +67,41 @@
                 
                 <div class="action-links">
                     <a th:href="@{/index}" class="btn-continue"><i class="fas fa-arrow-left"></i> Tiếp tục mua hoa</a>
-                    <a th:href="@{/checkout}" class="btn-checkout">Tiến hành thanh toán <i class="fas fa-arrow-right"></i></a>
+                    <a th:href="@{/checkout}" class="btn-checkout" onclick="return handleCheckoutClick(event)">Tiến hành thanh toán <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
         </div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:inline="javascript">
+        let isCartAlertShowing = false;
+        function handleCheckoutClick(e) {
+            /*[# th:if="${session.userSession == null}"]*/
+            e.preventDefault();
+            if (isCartAlertShowing) return false;
+            isCartAlertShowing = true;
+            Swal.fire({
+                icon: 'warning',
+                title: 'Yêu cầu đăng nhập',
+                text: 'Vui lòng đăng nhập tài khoản để tiến hành thanh toán đơn hàng!',
+                showCancelButton: true,
+                confirmButtonColor: '#d63384',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Đăng nhập ngay',
+                cancelButtonText: 'Để sau',
+                didClose: () => { isCartAlertShowing = false; }
+            }).then((result) => {
+                isCartAlertShowing = false;
+                if (result.isConfirmed) {
+                    window.location.href = /*[[@{/Login}]]*/ '/Login';
+                }
+            });
+            return false;
+            /*[/]*/
+            return true;
+        }
+    </script>
     <div th:replace="~{view/footer :: body}"></div> 
 </body>
 </html>

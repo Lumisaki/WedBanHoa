@@ -9,6 +9,8 @@
 </head>
 <body>
 
+    <div th:replace="~{view/admin_sidebar :: sidebar('product')}"></div>
+
     <div class="main-content">
         <div class="header-top">
             <h1>Trang Quản Trị Hệ Thống</h1>
@@ -105,11 +107,11 @@
 
     <script th:inline="javascript">
         window.addEventListener('DOMContentLoaded', function() {
-            /*[# th:if="${session.msgSuccess != null}"]*/
-            Swal.fire({ icon: 'success', title: 'Thành công!', text: /*[[${session.msgSuccess}]]*/ '', confirmButtonColor: '#10b981' });
+            /*[# th:if="${msgSuccess != null}"]*/
+            Swal.fire({ icon: 'success', title: 'Thành công!', text: /*[[${msgSuccess}]]*/ '', confirmButtonColor: '#10b981' });
             /*[/]*/
-            /*[# th:if="${session.msgError != null}"]*/
-            Swal.fire({ icon: 'error', title: 'Lỗi thao tác!', text: /*[[${session.msgError}]]*/ '', confirmButtonColor: '#ef4444' });
+            /*[# th:if="${msgError != null}"]*/
+            Swal.fire({ icon: 'error', title: 'Lỗi thao tác!', text: /*[[${msgError}]]*/ '', confirmButtonColor: '#ef4444' });
             /*[/]*/
         });
 

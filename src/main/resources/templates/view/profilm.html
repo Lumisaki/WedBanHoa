@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Tài Khoản Của Tôi | Tiệm Ba Hoa</title>
+    <title>Tài Khoản Của Tôi | Tiệm Năm Hoa</title>
     <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script>
@@ -133,12 +133,16 @@
                                     <td style="padding: 18px 15px; color: #64748b; font-size: 14px;" th:text="${o.order_date}">Ngày đặt</td>
                                     <td style="padding: 18px 15px; color: #d63384; font-weight: bold; font-size: 15px;" th:text="${#numbers.formatDecimal(o.total_price != null ? o.total_price : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</td>
                                     <td style="padding: 18px 15px;">
+                                        <span th:if="${o.status == 'Waiting Payment'}" class="status-badge" style="background:#ede9fe; color:#7c3aed; font-weight:600; padding:4px 8px; border-radius:4px; font-size:12px;">Chờ CK</span>
                                         <span th:if="${o.status == 'Pending'}" class="status-badge st-pending">Chờ Duyệt</span>
                                         <span th:if="${o.status == 'Processing'}" class="status-badge st-processing">Đang Giao</span>
                                         <span th:if="${o.status == 'Completed'}" class="status-badge st-completed">Hoàn Thành</span>
                                         <span th:if="${o.status == 'Cancelled'}" class="status-badge st-cancelled">Đã Hủy</span>
                                     </td>
-                                    <td style="padding: 18px 15px; text-align: center;">
+                                    <td style="padding: 18px 15px; text-align: center; white-space: nowrap;">
+                                        <a th:if="${o.status == 'Waiting Payment'}" th:href="@{/PaymentTransfer(orderId=${o.order_id})}" style="background:#7c3aed; color:white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block; margin-right: 5px;">
+                                            <i class="fas fa-qrcode"></i> Quét QR
+                                        </a>
                                         <a th:href="@{/OrderDetail(orderId=${o.order_id})}" style="background:#0284c7; color:white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-block; transition: 0.2s;"><i class="fas fa-eye"></i> Xem đơn</a>
                                     </td>
                                 </tr>

@@ -77,12 +77,26 @@ public class OrderController extends BaseController {
         return "redirect:/cart";
     }
 
+    @Autowired
+    private org.example.wedbanhoa.service.ReviewService reviewService;
+
     @PostMapping("/SubmitReview")
     public String submitReview(@RequestParam("orderId") Integer orderId,
                                @RequestParam("productId") Integer productId,
                                @RequestParam("rating") Integer rating,
                                @RequestParam("comment") String comment,
                                HttpSession session) {
+        Account user = (Account) session.getAttribute("userSession");
+        if (user == null) return "redirect:/Login";
+
+        org.example.wedbanhoa.dto.ReviewRequest reviewRequest = org.example.wedbanhoa.dto.ReviewRequest.builder()
+                .userId(user.getUserId())
+                .productId(productId)
+                .rating(rating != null ? rating : 5)
+                .comment(comment != null ? comment.trim() : "")
+                .build();
+        reviewService.saveReview(reviewRequest);
+
         session.setAttribute("message", "Cảm ơn bạn đã đánh giá món hoa!");
         return "redirect:/OrderDetail?orderId=" + orderId;
     }

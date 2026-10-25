@@ -7,25 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/admin.css}" href="/css/admin.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="brand">
-            <h2>TIỆM BA HOA</h2>
-            <p>MANAGEMENT</p>
-        </div>
-        <ul class="nav-menu">
-            <li><a th:href="@{/AdminDashboard}"><i class="fas fa-chart-line"></i> Dashboard Tổng</a></li>
-            <li><a th:href="@{/ManagerProduct}"><i class="fas fa-seedling"></i> Quản lý sản phẩm</a></li>
-            <li><a th:href="@{/ManagerCustomer}"><i class="fas fa-users"></i> Quản lý khách hàng</a></li>
-            <li id="menu-main" class="active"><a href="#" onclick="switchTab('main')"><i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng</a></li>
-            <li id="menu-chat"><a href="#" onclick="switchTab('chat')"><i class="fas fa-comments"></i> Hộp thư hỗ trợ <span id="admin-chat-badge">Mới</span></a></li>
-        </ul>
-        <div class="nav-bottom">
-            <ul class="nav-menu" style="padding: 0;">
-                <li><a th:href="@{/index}"><i class="fas fa-store"></i> Về trang bán hàng</a></li>
-                <li><a th:href="@{/Logout}" style="color: #ff4757;"><i class="fas fa-power-off"></i> Đăng xuất</a></li>
-            </ul>
-        </div>
-    </div>
+    <div th:replace="~{view/admin_sidebar :: sidebar('order')}"></div>
 
     <div class="main-content">
         <div class="header-top">
@@ -107,12 +89,39 @@
                             <div class="info-row no-border"><span>Thanh toán:</span> <strong style="color: #0284c7; background: #e0f2fe; padding: 4px 8px; border-radius: 4px; font-size: 12px;" th:text="${order.payment_method}"></strong></div>
                         </div>
                         
+                        <!-- Box duyệt nhanh thanh toán chuyển khoản -->
+                        <div th:if="${order.status == 'Waiting Payment'}" class="detail-card" style="border: 2px solid #8b5cf6; background: #faf5ff;">
+                            <h3 class="section-title" style="margin-top: 0; font-size: 16px; color: #6d28d9;">
+                                <i class="fas fa-university"></i> Xác Nhận Thanh Toán Ngân Hàng
+                            </h3>
+                            <p style="font-size: 13px; color: #6b21a8; margin-bottom: 15px;">
+                                Khách hàng chọn hình thức chuyển khoản ngân hàng. Hãy kiểm tra biến động số dư tài khoản ngân hàng trước khi xác nhận.
+                            </p>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <form th:action="@{/Admin/ConfirmBankPayment}" method="post" onsubmit="return confirm('Xác nhận đã nhận tiền thành công? Đơn hàng sẽ chuyển sang trạng thái Đang cắm/giao.')">
+                                    <input type="hidden" name="orderId" th:value="${order.order_id}">
+                                    <input type="hidden" name="from" value="detail">
+                                    <button type="submit" style="width: 100%; background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <i class="fas fa-check-circle"></i> ĐÃ NHẬN TIỀN (DUYỆT ĐƠN)
+                                    </button>
+                                </form>
+                                <form th:action="@{/Admin/RejectBankPayment}" method="post" onsubmit="return confirm('Hủy đơn hàng này do chưa nhận được tiền?')">
+                                    <input type="hidden" name="orderId" th:value="${order.order_id}">
+                                    <input type="hidden" name="from" value="detail">
+                                    <button type="submit" style="width: 100%; background: #ef4444; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                        <i class="fas fa-times"></i> Chưa nhận được tiền (Hủy đơn)
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
                         <div class="detail-card">
                             <h3 class="section-title" style="margin-top: 0; font-size: 16px;"><i class="fas fa-sync-alt"></i> Cập Nhật Trạng Thái</h3>
                             <form th:action="@{/UpdateOrderStatus}" method="post" style="display: flex; flex-direction: column; gap: 15px; margin: 0;">
                                 <input type="hidden" name="orderId" th:value="${order.order_id}">
                                 <select name="status" class="status-select" style="padding: 12px; border-radius: 8px; font-size: 14px; width: 100%;">
-                                    <option value="Pending" th:selected="${order.status == 'Pending'}">Chờ Duyệt</option>
+                                    <option value="Waiting Payment" th:selected="${order.status == 'Waiting Payment'}" style="color: #7c3aed; font-weight: bold;">Chờ xác nhận CK</option>
+                                    <option value="Pending" th:selected="${order.status == 'Pending'}">Chờ Duyệt (COD)</option>
                                     <option value="Processing" th:selected="${order.status == 'Processing'}">Đang Cắm/Giao hoa</option>
                                     <option value="Completed" th:selected="${order.status == 'Completed'}">Giao & Nhận Tiền</option>
                                     <option value="Cancelled" th:selected="${order.status == 'Cancelled'}">Hủy đơn</option>

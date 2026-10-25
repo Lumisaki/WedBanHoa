@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Thanh Toán Đơn Hàng | Tiệm Ba Hoa</title>
+    <title>Thanh Toán Đơn Hàng | Tiệm Năm Hoa</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/index.css?v=3.0}" href="/css/index.css?v=3.0">
     <script th:inline="javascript">
@@ -34,7 +34,27 @@
             if (checkBox && checkBox.checked) {
                 toggleReceiverInfo();
             }
+            updatePaymentMethodHighlight();
         });
+
+        function updatePaymentMethodHighlight() {
+            var codRadio = document.querySelector('input[name="paymentMethod"][value="COD"]');
+            var labelCod = document.getElementById('label_cod');
+            var labelBank = document.getElementById('label_bank');
+            if (labelCod && labelBank) {
+                if (codRadio && codRadio.checked) {
+                    labelCod.style.borderColor = '#10b981';
+                    labelCod.style.background = '#f0fdf4';
+                    labelBank.style.borderColor = '#e2e8f0';
+                    labelBank.style.background = '#ffffff';
+                } else {
+                    labelBank.style.borderColor = '#d63384';
+                    labelBank.style.background = '#fff5f7';
+                    labelCod.style.borderColor = '#e2e8f0';
+                    labelCod.style.background = '#ffffff';
+                }
+            }
+        }
 
         function toggleReceiverInfo() {
             var checkBox = document.getElementById("is_direct");
@@ -302,7 +322,7 @@
                 </div>
 
                 <div class="sub-section" style="margin-bottom: 0;">
-                    <h3 class="section-title">Yêu cầu, lưu ý [cho Tiệm Ba Hoa]</h3>
+                    <h3 class="section-title">Yêu cầu, lưu ý [cho Tiệm Năm Hoa]</h3>
                     <div class="form-group full-width">
                         <textarea name="special_requests" rows="3" placeholder="Nhập các yêu cầu lưu ý đặc biệt tại đây để florist lưu tâm khi cắm bông và shipper lưu ý khi đi đường..." th:text="${session.temp_special_requests}"></textarea>
                     </div>
@@ -357,6 +377,26 @@
                 <div class="price-row grand-total">
                     <span>Tổng tiền thanh toán chốt:</span>
                     <span id="grand_total_cash" th:text="${#numbers.formatDecimal(grandTotal != null ? grandTotal : 0, 0, 'COMMA', 0, 'POINT') + 'đ'}"></span>
+                </div>
+
+                <div class="sub-section" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <h3 class="section-title" style="font-size: 15px; margin-bottom: 12px;"><i class="fas fa-wallet" style="color: #d63384;"></i> Phương thức thanh toán</h3>
+                    
+                    <label class="payment-method-card" style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 2px solid #10b981; background: #f0fdf4; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;" id="label_cod">
+                        <input type="radio" name="paymentMethod" value="COD" checked style="margin-top: 3px;" onchange="updatePaymentMethodHighlight()">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #1e293b;"><i class="fas fa-money-bill-wave" style="color: #10b981; margin-right: 5px;"></i> Thanh toán khi nhận hàng (COD)</div>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 3px;">Nhận hoa tại nhà, kiểm tra hoa tươi mới rồi thanh toán tiền mặt cho shipper. Đơn hàng chuyển thẳng sang trạng thái chờ giao.</div>
+                        </div>
+                    </label>
+
+                    <label class="payment-method-card" style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 8px; cursor: pointer; transition: 0.2s;" id="label_bank">
+                        <input type="radio" name="paymentMethod" value="BankTransfer" style="margin-top: 3px;" onchange="updatePaymentMethodHighlight()">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #1e293b;"><i class="fas fa-qrcode" style="color: #d63384; margin-right: 5px;"></i> Chuyển khoản Ngân hàng (Bank Transfer / QR)</div>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 3px;">Quét mã VietQR chuyển khoản nhanh bằng App ngân hàng. Đơn hàng sẽ lưu là "Chờ xác nhận chuyển khoản" để Admin xác nhận.</div>
+                        </div>
+                    </label>
                 </div>
 
                 <button type="submit" class="btn-submit-order">

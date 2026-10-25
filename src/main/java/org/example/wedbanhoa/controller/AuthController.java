@@ -7,7 +7,6 @@ import org.example.wedbanhoa.dto.OderResponse;
 import org.example.wedbanhoa.entity.Account;
 import org.example.wedbanhoa.service.AccountService;
 import org.example.wedbanhoa.service.OrderService;
-import org.example.wedbanhoa.utils.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,6 +28,13 @@ public class AuthController extends BaseController {
     @GetMapping("/Login")
     public String loginPage(Model model, HttpSession session) {
         setHeaderData(model, session);
+        String successMsg = (String) session.getAttribute("successMsg");
+        if (successMsg != null) {
+            model.addAttribute("successMsg", successMsg);
+            session.removeAttribute("successMsg");
+        }
+        session.removeAttribute("errorMsg");
+        session.removeAttribute("error");
         return "view/login";
     }
 
@@ -90,6 +96,18 @@ public class AuthController extends BaseController {
         return "redirect:/Login";
     }
 
+    @PostMapping("/api/clear-session-msg")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, String> clearSessionMsg(HttpSession session) {
+        if (session != null) {
+            String[] flashKeys = {"msgSuccess", "msgError", "errorMsg", "successMsg", "sweetSuccess", "sweetError", "reviewMsg", "message", "error"};
+            for (String key : flashKeys) {
+                session.removeAttribute(key);
+            }
+        }
+        return java.util.Map.of("status", "cleared");
+    }
+
     @GetMapping("/profilm")
     public String profile(Model model, HttpSession session) {
         Account user = (Account) session.getAttribute("userSession");
@@ -149,15 +167,12 @@ public class AuthController extends BaseController {
             return "redirect:/profilm";
         }
 
-        Account current = accountService.getEntityById(user.getUserId());
-        if (current == null || !BCrypt.checkpw(oldPass, current.getPassword())) {
+        boolean ok = accountService.changePassword(user.getUserId(), oldPass, newPass);
+        if (ok) {
+            session.setAttribute("message", "Đổi mật khẩu thành công!");
+        } else {
             session.setAttribute("error", "Mật khẩu hiện tại không chính xác!");
-            return "redirect:/profilm";
         }
-
-        current.setPassword(BCrypt.hashpw(newPass, BCrypt.gensalt()));
-        accountService.updateProfile(current);
-        session.setAttribute("message", "Đổi mật khẩu thành công!");
         return "redirect:/profilm";
     }
 

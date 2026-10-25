@@ -12,6 +12,12 @@ import java.util.List;
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
     List<OrderDetail> findByOrderId(Integer orderId);
 
+    @Query("SELECT od FROM OrderDetail od LEFT JOIN FETCH od.product WHERE od.orderId = :orderId")
+    List<OrderDetail> findByOrderIdWithProduct(@Param("orderId") Integer orderId);
+
     @Query("SELECT COALESCE(SUM(od.quantity), 0) FROM OrderDetail od JOIN Order o ON od.orderId = o.orderId WHERE od.productId = :productId AND o.status = 'Completed'")
     Integer getSoldQuantityByProductId(@Param("productId") Integer productId);
+
+    @Query("SELECT od.productId, COALESCE(SUM(od.quantity), 0) FROM OrderDetail od JOIN Order o ON od.orderId = o.orderId WHERE o.status = 'Completed' GROUP BY od.productId")
+    List<Object[]> getAllSoldQuantities();
 }

@@ -35,6 +35,16 @@ public abstract class BaseController {
             if (user != null) {
                 model.addAttribute("userSession", user);
             }
+
+            // Tiêu thụ Flash Message: Chuyển toàn bộ thông báo sang Model và xóa ngay khỏi session để tránh lặp vô hạn
+            String[] flashKeys = {"msgSuccess", "msgError", "errorMsg", "successMsg", "sweetSuccess", "sweetError", "reviewMsg", "message", "error"};
+            for (String key : flashKeys) {
+                Object val = session.getAttribute(key);
+                if (val != null) {
+                    model.addAttribute(key, val);
+                    session.removeAttribute(key);
+                }
+            }
         }
     }
 }
